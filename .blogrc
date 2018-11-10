@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+BLOG_HOST="http://x4m3.rocks/blog/"
+BLOG_TITLE="deadbaed"
+POSTS_PER_PAGE=20
+
+# This is your build directory
+DIST=/srv/www/x4m3-rocks/blog
+
+# These directories are copied into your build directory
+STATIC_DIRS="img files"
+
+# Use custom template files, see instructions at https://github.com/hmngwy/jenny#customization
+#LAYOUT_DIR=
+
+# Use a custom Markdown command
+#MARKDOWN_COMMAND=
+
+# Commands to run after succesful build
+#function post_hook() {
+#  echo "Done."
+#}
