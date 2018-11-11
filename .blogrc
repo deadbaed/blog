@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
-BLOG_HOST="http://x4m3.rocks/blog/"
+BLOG_HOST="http://blog.x4m3.rocks/"
 BLOG_TITLE="deadbaed"
 POSTS_PER_PAGE=20
 
 # This is your build directory
-DIST=/srv/www/x4m3-rocks/blog
+DIST=/srv/www/blog-x4m3-rocks/
 
 # These directories are copied into your build directory
 STATIC_DIRS="img files"
