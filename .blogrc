@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-BLOG_HOST="http://blog.x4m3.rocks/"
+BLOG_HOST="http://blog.x4m3.rocks"
 BLOG_TITLE="deadbaed"
 POSTS_PER_PAGE=20
 
@@ -11,7 +11,7 @@ DIST=/srv/www/blog-x4m3-rocks/
 STATIC_DIRS="img files"
 
 # Use custom template files, see instructions at https://github.com/hmngwy/jenny#customization
-#LAYOUT_DIR=
+LAYOUT_DIR=.layout
 
 # Use a custom Markdown command
 #MARKDOWN_COMMAND=
