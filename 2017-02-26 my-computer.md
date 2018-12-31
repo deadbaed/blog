@@ -28,12 +28,21 @@ pics now! (_i know you came for the pics_)
 note: the pics were taken in july 2016, and i was testing ubuntu 16.04 (terrible idea don't do that)  
 
 [the keyboard (backlit) & the trackpad (1.3 MB)](/img/my-computer/img_3667.jpg)  
+
 [the entire thing (1.3 MB)](/img/my-computer/img_3668.jpg)  
+
 [the display (pretty good right?) (1.4 MB)](/img/my-computer/img_3670.jpg)  
+
 [the back of the computer (WITH STICKERS) (1.7 MB)](/img/my-computer/img_3671.jpg)  
+
 [the laptop in my hand (around 1kilogram according to my sister) (1.4 MB)](/img/my-computer/img_3672.jpg)  
+
 [the light when the laptop is running (1.3 MB)](/img/my-computer/img_3673.jpg)  
+
 [the light when the laptop is off (it will slowly blink when it's in sleep mode) (1.3 MB)](/img/my-computer/img_3674.jpg)  
+
 [left side of the laptop (power; hdmi; minidisplay; usb3; jack;) (1.1 MB)](/img/my-computer/img_3675.jpg)  
+
 [right side of the laptop (usb3; proprietary ethernet dongle; fan; kingerston safe lock thing;) (1.2 MB)](/img/my-computer/img_3676.jpg)  
+
 [the back of the laptop (if you care about that) (1.2 MB)](/img/my-computer/img_3677.jpg)  
