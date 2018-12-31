@@ -6,8 +6,7 @@ BLOG_TITLE="deadbaed"
 POSTS_PER_PAGE=20
 
 # This is your build directory
-DIST=/srv/www/blog-x4m3-rocks/
-#DIST=./.dist
+DIST=.dist
 
 # These directories are copied into your build directory
 STATIC_DIRS="img files"

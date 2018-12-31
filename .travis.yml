@@ -1,0 +1,19 @@
+language: bash
+
+before_install:
+  - sudo apt-get -qq update
+  - git clone https://github.com/hmngwy/jenny.git /tmp/jenny
+  - (cd /tmp/jenny; sudo make install)
+  - mkdir .dist
+
+script:
+  - jenny
+
+deploy:
+  provider: pages
+  local_dir: .dist
+  skip_cleanup: true
+  github_token: $GITHUB_TOKEN
+  target_branch: gh-pages
+  on:
+    branch: master
