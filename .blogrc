@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 
 BLOG_HOST="http://blog.x4m3.rocks"
+#BLOG_HOST="http://localhost:8002"
 BLOG_TITLE="deadbaed"
 POSTS_PER_PAGE=20
 
 # This is your build directory
 DIST=/srv/www/blog-x4m3-rocks/
+#DIST=./.dist
 
 # These directories are copied into your build directory
 STATIC_DIRS="img files"
