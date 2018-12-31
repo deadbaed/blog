@@ -71,7 +71,10 @@ cat << _EOF_
 			$(index_loop)
     </ul>
 		$(nav)
-    <footer><span>blog generated with <a href="https://github.com/hmngwy/jenny">jenny</a></span></footer>
+    <footer>
+      <span>get the <a href="feed.xml">rss feed 📰</a></span><br>
+      <span>blog generated with <a href="https://github.com/hmngwy/jenny">jenny</a></span>
+    </footer>
   </body>
 </html>
 _EOF_
