@@ -18,6 +18,7 @@ LAYOUT_DIR=.layout
 #MARKDOWN_COMMAND=
 
 # Commands to run after succesful build
-#function post_hook() {
-#  echo "Done."
-#}
+function post_hook() {
+  cp CNAME .dist
+  echo "CNAME copied in dist folder"
+}
