@@ -6,7 +6,7 @@ before_install:
   - mkdir .dist
 
 script:
-  - jenny -v
+  - jenny -c -v -n
 
 deploy:
   provider: pages
