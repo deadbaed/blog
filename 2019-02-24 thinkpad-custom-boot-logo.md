@@ -47,7 +47,7 @@ where **X** is your drive letter that you know thanks to `lsblk`.
 
 ## get the *gif* file to use
 
-if you want, i already have a [selection of images](/img/thinkpad-custom-boot-logo/boot-logo/) ready to be used, or you can make your own!
+if you want, i already have a [selection of images](https://github.com/x4m3/deadbaed/tree/master/img/thinkpad-custom-boot-logo/boot-logo) ready to be used, or you can make your own!
 
 you can see the requirements, go in your usb drive, open the **readme.txt** in the *flash* folder.
 
