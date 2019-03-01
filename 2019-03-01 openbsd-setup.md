@@ -4,15 +4,15 @@ just installed openbsd on my chromebook, seems to be working fine!
 
 since it's my first time using openbsd, here are some stuff that i will start to do on my machines after installing openbsd:
 
-# enable `doas`
+## enable `doas`
 
 `doas` is kinda the equivalent of `sudo`. to enable it, run `cp /etc/examples/doas.conf /etc` to copy the doas config file.
 
-# disable root account
+## disable root account
 
 now that `doas` is ready, we dont need to root account anymore. to disable it, run `usermod -p'*' root` to set the root password to '*'. this will prevent root from log on directly to the machine (with `su` as an example), but with `doas` we can run `doas sh` to get a shell.
 
-# install missing firmware for your hardware
+## install missing firmware for your hardware
 
 maybe your wifi card isn't working? or maybe you can't display any graphical interface? maybe that's because you don't have the firmware for it: here's how to install it:
 
