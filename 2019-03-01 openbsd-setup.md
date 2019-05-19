@@ -10,7 +10,7 @@ since it's my first time using openbsd, here are some stuff that i will start to
 
 ## disable root account
 
-now that `doas` is ready, we dont need to root account anymore. to disable it, run `usermod -p'*' root` to set the root password to '*'. this will prevent root from log on directly to the machine (with `su` as an example), but with `doas` we can run `doas sh` to get a shell.
+now that `doas` is ready, we dont need to root account anymore. to disable it, run `usermod -p'*' root` to set the root password to `*`. this will prevent root from log on directly to the machine (with `su` as an example), but with `doas` we can run `doas sh` to get a shell.
 
 ## install missing firmware for your hardware
 
