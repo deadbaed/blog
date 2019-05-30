@@ -3,7 +3,7 @@
 BLOG_HOST="http://blog.x4m3.rocks"
 #BLOG_HOST="http://localhost:8002"
 BLOG_TITLE="deadbaed"
-POSTS_PER_PAGE=20
+POSTS_PER_PAGE=10
 
 # This is your build directory
 DIST=.dist
