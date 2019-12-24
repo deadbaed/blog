@@ -1,4 +1,4 @@
-# merry chirstmas
+# merry christmas
 
 it's that time of the year already! damn time flies
 
