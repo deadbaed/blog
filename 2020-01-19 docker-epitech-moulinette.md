@@ -8,7 +8,7 @@ ubuntu: __`sudo apt install docker.io`__
 
 ## setup docker before first use
 
-__`sudo usermod -aG docker $USER`__ and reboot your computer afterwards for changes to take effect.
+__`sudo usermod -aG docker $USER`__ and __REBOOT__ your computer afterwards for changes to take effect.
 
 __`sudo systemctl start docker`__ will start docker when you need it
 __`sudo systemctl enable docker`__ to start docker on every boot
