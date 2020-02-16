@@ -1,4 +1,8 @@
-# zsh vim autocomplete error
+---
+layout: post
+title:  "error on zsh when using vim and autocomplete"
+date:   2018-03-13
+---
 
 # error on zsh when using vim and autocomplete
 
@@ -12,7 +16,7 @@ _arguments:448: _vim_files: function definition file not found
 
 annoying af, right ?
 
-## FIX
+## how to fix it
 
 here's how to fix it: delete the zcompdump directory off your personal directory, and reload your zsh config file (or close and open a new shell).
 

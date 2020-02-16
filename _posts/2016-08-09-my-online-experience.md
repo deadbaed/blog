@@ -1,3 +1,9 @@
+---
+layout: post
+title:  "my online experience"
+date:   2016-08-09
+---
+
 # my online experience
 
 > protip: don't listen to teachers in school, learn from the internet

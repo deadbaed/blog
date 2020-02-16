@@ -1,3 +1,9 @@
+---
+layout: post
+title:  "combine i3 and mate"
+date:   2019-01-21
+---
+
 # combine i3 and mate
 
 

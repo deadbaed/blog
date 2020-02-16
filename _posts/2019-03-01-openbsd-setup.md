@@ -1,3 +1,9 @@
+---
+layout: post
+title:  "openbsd first setup after install"
+date:   2019-03-01
+---
+
 # openbsd first setup after install
 
 just installed openbsd on my chromebook, seems to be working fine!

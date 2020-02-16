@@ -1,3 +1,9 @@
+---
+layout: post
+title:  "Wolf Lambert music review"
+date:   2016-08-02
+---
+
 # Wolf Lambert music review
 
 My friend [Wolf Lambert](http://wolflambert.space) makes music, which is good to be honest, I really enjoy it.
@@ -22,11 +28,11 @@ That's the kind of music I love, because for most artists I'm stressed to know t
 
 Back to his work. He released the EP ___Stealth___ on July 1st, 2016; great EP, very calm as usual, speeds up here and there, and slows down again. Loved it.
 
-I think I can recognize Wolf's music without knowing the title or the album of the song, I'm used to his indietronica style, that's why I recognize his work directely; the music is weird, but not creepy, it's kinda like nonsence, but in a good way, it makes you feel good.
+I think I can recognize Wolf's music without knowing the title or the album of the song, I'm used to his indietronica style, that's why I recognize his work directly; the music is weird, but not creepy, it's kinda like nonsense, but in a good way, it makes you feel good.
 
 He said that his newest album will come out this month, _August 2016_, and I can't wait to listen to it.
 
-Now, I will not hide that Wolf is my friend, I've been knowing him for more than a year and half, so you might think that this review is absolutely biased because I know him but that is not true, in fact, when I asked him some info about his work, I told him that I was gatering information for his Wikipedia page (that will happen someday, I'm sure)!
+Now, I will not hide that Wolf is my friend, I've been knowing him for more than a year and half, so you might think that this review is absolutely biased because I know him but that is not true, in fact, when I asked him some info about his work, I told him that I was gathering information for his Wikipedia page (that will happen someday, I'm sure)!
 
 If you see this story Wolf, thank you for your great work, keep it up.
 

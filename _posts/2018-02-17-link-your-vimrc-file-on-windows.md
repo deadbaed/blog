@@ -1,3 +1,9 @@
+---
+layout: post
+title:  "how to link your vimrc file on windows"
+date:   2018-02-17
+---
+
 # how to link your vimrc file on windows
 
 i code on my linux machine, and i use vim as my text editor.  
@@ -23,8 +29,6 @@ mklink .vimrc _path-to-vimrc_
 and you should be good to go.  
 just make sure it has been linked correctly with `vim ~/.vimrc`
 
-
-
 ## powershell
 
 if you use the new, blue boxed __powershell.exe__, it's a bit different:  
@@ -36,8 +40,6 @@ or you can keep it simple and use the __cmd__ command to use __cmd.exe__ to run 
 cd c:\users\_username_
 cmd /c mklink .vimrc _path-to-vimrc_
 ```
-
-
 
 ## sources
 

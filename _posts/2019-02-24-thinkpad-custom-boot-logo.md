@@ -1,6 +1,12 @@
+---
+layout: post
+title:  "how to put a custom boot logo on a thinkpad"
+date:   2019-02-24
+---
+
 # how to put a custom boot logo on a thinkpad
 
-> *WARNING*
+> **WARNING**
 >
 > i need to warn you that you are on your own. even though it works fine, i'm not responsible of what you do.
 

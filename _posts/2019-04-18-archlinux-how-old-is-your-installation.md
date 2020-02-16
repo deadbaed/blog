@@ -1,3 +1,9 @@
+---
+layout: post
+title:  "archlinux how old is your installation"
+date:   2019-04-18
+---
+
 # archlinux how old is your installation
 
 on archlinux, to see when you installed arch on your computer, run this command

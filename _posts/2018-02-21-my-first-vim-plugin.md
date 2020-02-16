@@ -1,8 +1,15 @@
+---
+layout: post
+title:  "my first vim plugin"
+date:   2018-02-21
+---
+
 # my first vim plugin
 
 ## i did it !
 
-ayyy! i wrote my first vim plugin!  
+ayyy! i wrote my first vim plugin!
+
 i'm so proud of this project, i started it and i finished it under 24 hours (check [the git history](https://github.com/x4m3/vim-dhex/commits/master) if you dont believe me).
 
 ## what is it ?

@@ -1,3 +1,9 @@
+---
+layout: post
+title:  "grub, how to fix nvidia issue for epitech student 2023"
+date:   2018-09-29
+---
+
 # grub, how to fix nvidia issue for epitech student 2023
 
 to everyone who got a computer with an nvidia card, ___YOU SUCK___!  

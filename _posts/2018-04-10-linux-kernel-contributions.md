@@ -1,3 +1,9 @@
+---
+layout: post
+title:  "my contributions to the linux kernel"
+date:   2018-04-10
+---
+
 # my contributions to the linux kernel
 
 you read it right! i am a contributor to the linux kernel!
