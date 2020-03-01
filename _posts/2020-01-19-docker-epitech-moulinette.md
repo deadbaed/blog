@@ -17,7 +17,8 @@ this guide will show you how to install docker, download the epitech moulinette 
 
 use docker without root privileges with `sudo usermod -aG docker $USER` and **REBOOT** your computer afterwards for changes to take effect.
 
-`sudo systemctl start docker` will start docker when you need it and `sudo systemctl enable docker` to start docker on every boot
+- `sudo systemctl start docker` and `sudo systemctl stop docker` will start and stop docker when you need it
+- `sudo systemctl enable docker` to start docker on every boot
 
 ## make sure docker runs correctly
 
