@@ -10,7 +10,8 @@ this guide will show you how to install docker, download the epitech moulinette 
 
 ## install
 
-ubuntu: `sudo apt install docker.io`
+- ubuntu: `sudo apt install docker.io`
+- arch: `sudo pacman -S docker`
 
 ## setup docker before first use
 
