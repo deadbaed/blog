@@ -35,3 +35,5 @@ run `docker pull epitechcontent/epitest-docker` to download the epitech moulinet
 go into the directory you want to get a shell in the epitech container.
 
 run `docker run -it --rm -v $(pwd):/home/project -w /home/project epitechcontent/epitest-docker /bin/bash` and you will get a bash prompt: you are now in the container. run the commands you want, and exit the shell when you are done (either with `exit` or by entering `ctrl + d`).
+
+if you are using docker on windows (inside powershell), run `docker run -it --rm -v ${pwd}:/home/project -w /home/project epitechcontent/epitest-docker /bin/bash` 
