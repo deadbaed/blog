@@ -1,0 +1,20 @@
+title = "deadbaed"
+description = "broke my bed now it's dead"
+
+# The URL the site will be built for
+base_url = "https://blog.x4m3.rocks"
+
+compile_sass = true
+
+generate_feed = true
+feed_filename = "atom.xml"
+
+[markdown]
+highlight_code = true
+highlight_theme = "gruvbox-light"
+
+[extra]
+footer_links = [
+    {url = "$BASE_URL/atom.xml", name = "RSS"},
+    {url = "https://philippeloctaux.com", name = "Website"},
+]

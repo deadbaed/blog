@@ -1,0 +1,92 @@
+{% import "macros.html" as macros %}
+
+<!DOCTYPE html>
+<html lang="en">
+  {% block head %}
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>{% block title %}{{ config.title }}{% endblock title %}</title>
+    <meta name="description" content="{% block description %}{{ config.description }}{% endblock description %}" />
+    <link rel="shortcut icon"  href="{{ get_url(path="favicon.ico") | safe }}" />
+    <link rel="alternate" type="application/atom+xml" title="RSS" href="{{ get_url(path="atom.xml") | safe }}">
+
+    {% set data = load_data(path="public/style.css", format="plain") -%}
+    <style>{{ data | safe }}</style>
+
+    {% block seo -%}
+      <meta property="og:site_name" content="{% block ogsitename %}{{config.title}}{% endblock ogsitename %}">
+      {% if config.extra.author -%}
+        <meta name="author" content="{{ config.extra.author }}" />
+      {%- endif %}
+      <meta property="og:title" content="{% block ogtitle %}{{config.title}}{% endblock ogtitle %}">
+      <meta property="og:description" content="{% block ogdesc %}{{config.description}}{% endblock ogdesc %}">
+      <meta property="og:url" content="{% block ogurl %}{{config.base_url | safe }}{% endblock ogurl %}">
+      <meta property="og:image" content="{% block ogimage %}{% if config.extra.ogimage %}{{ get_url(path=config.extra.ogimage) | safe }}{% endif %}{% endblock ogimage %}">
+
+      {% if page.date -%}
+        <meta property="og:type" content="article" />
+        <meta property="article:published_time" content="{{ page.date | date(format="%+") }}" />
+      {%- endif %}
+
+      {% if page.earlier -%}
+        <link rel="prev" href="{{ page.earlier.permalink | safe }}" />
+      {%- endif %}
+      {% if page.later -%}
+        <link rel="next" href="{{ page.later.permalink | safe }}" />
+      {%- endif %}
+    {%- endblock seo -%}
+
+    {% block extra_head %}
+    {% endblock extra_head %}
+
+    <script defer data-domain="blog.x4m3.rocks" src="https://plausible.y.z.x4m3.rocks/js/script.js"></script>
+  </head>
+  {% endblock head %}
+
+  <body>
+    <main id="main" role="main">
+
+      {% block header %}
+      <header role="banner">
+        <h3 style="margin-top:0;">
+          <a href="{{ config.base_url | safe }}" title="Home">{{ config.title }}</a>
+          <br /><small>{{ config.description }}</small>
+        </h3>
+      </header>
+      <hr />
+      {% endblock header %}
+
+      {% block content %}
+      <ul class="homepage-list">
+        {% for post in section.pages %}
+          {{ macros::post_in_list(post=post) }}
+        {% endfor %}
+      </ul>
+      {% endblock content %}
+
+      {% block footer %}
+      <footer role="contentinfo">
+        <hr />
+        {% if config.extra.footer_links %}
+        <nav style="margin-bottom:1rem;" role="navigation">
+          {% for item in config.extra.footer_links %}
+            <a href="{{ item.url | replace(from="$BASE_URL", to=config.base_url) | safe }}">{{ item.name }}</a>
+            {% if loop.last %}{% else %}
+              <span>&middot;</span>
+            {% endif %}
+          {% endfor %}
+        </nav>
+        {% endif %}
+        {% block taglines %}
+        {% endblock taglines %}
+      </footer>
+      {% endblock footer %}
+
+    </main>
+    {% block after_main %}
+    {% endblock after_main %}
+  </body>
+</html>
+
