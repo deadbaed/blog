@@ -298,7 +298,7 @@ We are just testing if the tunnel works. You can stop the tunnel.
 wg-quick down wg0
 ```
 
-# Scripts to launch on server startup
+# Script to launch on server startup
 
 To start WireGuard on startup, we will write an OpenRC script. It will be located in
 ```
