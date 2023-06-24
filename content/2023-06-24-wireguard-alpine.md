@@ -176,6 +176,10 @@ chmod 600 /etc/wireguard/*
 
 You will need to repeat this for each new peer
 
+```sh
+cd /etc/wireguard/
+```
+
 ## Generate keys
 
 Starting now, `name` is a placeholder for the name of the peer.
@@ -184,12 +188,12 @@ I typically use the format **name-of-person** followed by **device-name**. For e
 
 Create folder to store keys for the peer:
 ```sh
-mkdir -p /etc/wireguard/peers/name
+mkdir -p peers/name
 ```
 
 Generate preshared key (not required):
 ```sh
-wg genpsk | tee /etc/wireguard/peers/name/preshared.psk
+wg genpsk | tee peers/name/preshared.psk
 ```
 
 Generate private and public keys for the peer:
@@ -246,6 +250,14 @@ And run
 ```sh
 qrencode -t ansiutf8 < peers/name/philt3r-name.wg.conf
 ```
+
+## Restart WireGuard
+
+If you already have WireGuard running, simply run
+```
+rc-service wg restart
+```
+to restart the server with your new peer.
 
 # Start WireGuard manually
 
