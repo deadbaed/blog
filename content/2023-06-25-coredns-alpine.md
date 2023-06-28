@@ -3,6 +3,8 @@ title = "Setup CoreDNS on Alpine Linux"
 date = 2023-06-25
 +++
 
+Now that we have a WireGuard VPN, let's add a DNS server, to type letters instead of numbers!
+
 # Install CoreDNS
 
 You will need to enable the `community` repo first.
