@@ -57,25 +57,9 @@ My DNS service of choice comes from [free.fr](https://free.fr). Feel free to put
 
 CoreDNS already has a service!
 
-Since we want to have our DNS only inside WireGuard, we want WireGuard to start only after CoreDNS has started. To do so, edit
-```
-/etc/init.d/wg
-```
-and update this section:
-```patch
---- /etc/init.d/wg
-+++ /etc/init.d/wg
-@@ -4,7 +4,7 @@
- description="WireGuard"
-
- depend() {
--    need localmount net sysctl
-+    need localmount net sysctl coredns
-     after bootmisc
- }
-```
-
-And reboot! Or restart the WireGuard service.
+- Add at startup: `rc-update add coredns`
+- Remove from startup: `rc-update del coredns`
+- Show services at startup: `rc-status`
 
 The logs of CoreDNS should be available at
 ```

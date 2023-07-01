@@ -295,7 +295,7 @@ Create a file at
 ```
 and place the password inside that file.
 
-`step` should be ran as the user `step-ca`, so update the permissions on the config folder:
+`step` should run as the user `step-ca`, so update the permissions on the config folder:
 ```sh
 chown step-ca:step-ca -Rv /etc/step-ca/
 ```
