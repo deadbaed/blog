@@ -24,7 +24,7 @@ Create the config in
 (common) {
     cache 60
     acl {
-        allow net 10.131.110.0/24 10.131.111.0/24
+        allow net 127.0.0.1 10.131.110.0/24 10.131.111.0/24
         block
     }
 }
@@ -65,3 +65,31 @@ The logs of CoreDNS should be available at
 ```
 /var/log/coredns/coredns.log
 ```
+
+# Use CoreDNS on the system
+
+Now that we have our DNS server, let's use it on our server!
+
+If you use DHCP to get the ip address of your server, the DNS will always be used from the DHCP.
+
+We want to use our own DHCP server.
+
+Create the file (and the folder associated with it)
+```
+/etc/udhcpc/udhcpc.conf
+```
+and put
+```
+RESOLV_CONF="NO"
+```
+
+Then, edit the
+```
+/etc/resolv.conf
+```
+and put
+```
+nameserver 127.0.0.1
+```
+
+Restart the server.
