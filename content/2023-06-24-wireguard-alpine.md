@@ -89,7 +89,6 @@ Edit
 and add
 ```sh
 net.ipv4.ip_forward = 1
-net.ipv4.conf.all.src_valid_mark = 1
 ```
 at the bottom of the file, and save
 
@@ -153,18 +152,16 @@ Protip for vim users: To add content of a file in current buffer directly: [Stac
 Address = 10.131.111.1/24
 ListenPort = 51820
 PrivateKey = <server-private-key>
-PreUp = logger "Starting WireGuard"
 PostUp = iptables -t nat -A POSTROUTING -s 10.131.111.0/24 -o %i -j MASQUERADE;
+PostUp = iptables -t nat -A POSTROUTING -s 10.131.110.0/24 -o %i -j MASQUERADE;
 PostUp = iptables -A INPUT -p udp -m udp --dport 51820 -j ACCEPT;
 PostUp = iptables -A FORWARD -i %i -j ACCEPT;
 PostUp = iptables -A FORWARD -o %i -j ACCEPT;
-PostUp = logger "WireGuard Started"
-PreDown = logger "Stopping WireGuard"
 PostDown = iptables -t nat -D POSTROUTING -s 10.131.111.0/24 -o %i -j MASQUERADE;
+PostDown = iptables -t nat -D POSTROUTING -s 10.131.110.0/24 -o %i -j MASQUERADE;
 PostDown = iptables -D INPUT -p udp -m udp --dport 51820 -j ACCEPT;
 PostDown = iptables -D FORWARD -i %i -j ACCEPT;
 PostDown = iptables -D FORWARD -o %i -j ACCEPT;
-PostDown = logger "WireGuard Stopped"
 ```
 
 Once it's good, make sure only root can read and write to the files:
@@ -210,7 +207,9 @@ Edit your `wg0.conf`, add at the bottom:
 # Name = name
 PublicKey = <peers/name/public.key>
 PresharedKey = <peers/name/preshared.psk>
-AllowedIPs = 10.131.111.2/32,10.131.110.0/24,10.131.111.0/24
+AllowedIPs = 10.131.111.2/32
+AllowedIPs = 10.131.110.0/24
+AllowedIPs = 10.131.111.0/24
 ```
 
 ## Peer configuration
@@ -227,16 +226,18 @@ And put the following
 [Interface]
 PrivateKey = <peers/name/private.key>
 Address = 10.131.111.2/24
+#DNS = 10.131.111.1
 
 [Peer]
 PublicKey = <server-public-key>
 PresharedKey = <peers/name/preshared.psk>
 Endpoint = <server-ip>:51820
-AllowedIPs = 10.131.110.0/24,10.131.111.0/24
+AllowedIPs = 10.131.110.0/24
+AllowedIPS = 10.131.111.0/24
 PersistentKeepalive = 25
 ```
 
-DNS info is not provided, it's normal, I will put this once my DNS server will be created (not in this blog post though).
+DNS info is not used yet, it's normal, I will enable it once my DNS server will be created (not in this blog post though).
 
 ## Distribute config
 
