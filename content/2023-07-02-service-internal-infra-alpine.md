@@ -58,6 +58,8 @@ Reboot and make sure everything works, you should see WireGuard logs when the ma
 
 And the DNS should be working! Try to ping an internal DNS name.
 
+Sometimes the DNS will go back to the system's default (probably your DHCP server's), so force the DNS as seen in the post about CoreDNS.
+
 # DNS entry
 
 In the main server, edit CoreDNS to add a new DNS entry for the newly added peer.
