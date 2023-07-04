@@ -21,7 +21,7 @@ Install Alpine. Setup ssh and repositories.
 
 We will set up WireGuard, but not a server, a regular peer that will connect to the WireGuard server.
 
-Create a new peer on the WireGuard server, and copy the config file to the new peer.
+Create a new peer on the WireGuard server, and get the config file ready.
 
 ## Install
 
@@ -43,7 +43,7 @@ and reboot.
 
 ## Configure
 
-Copy the config file to
+Put the WireGuard config to
 ```
 /etc/wireguard/wg0.conf
 ```
@@ -103,6 +103,7 @@ Don't start caddy yet.
 
 On our new server, we need to trust the root ca. Download the root ca, and ask the system to trust it:
 ```sh
+apk add ca-certificates ca-certificates-bundle
 wget --no-check-certificate https://10.131.111.1:444/roots.pem -O /usr/local/share/ca-certificates/philt3r.crt
 update-ca-certificates 
 ```
@@ -140,7 +141,7 @@ docker.philt3r {
 
 Since I'll be using Docker to host most services, I'll install it:
 ```sh
-apk add docker
+apk add docker docker-compose
 rc-update add docker
 rc-service docker start
 ```
