@@ -241,8 +241,11 @@ DNS info is not used yet, it's normal, I will enable it once my DNS server will 
 
 ## Distribute config
 
-Either give the configuration file we just created, or make a qr code:
+Either give the configuration file we just created, or you can have multiple choices.
 
+### QR Code
+
+Start by installing
 ```sh
 apk add libqrencode
 ```
@@ -251,6 +254,21 @@ And run
 ```sh
 qrencode -t ansiutf8 < peers/name/philt3r-name.wg.conf
 ```
+
+### Base64
+
+Note: I'm using `base64` on Alpine, which comes from BusyBox, the CLI may be different depending on the operating system you're using.
+
+Encode the configuration file to a base64 string:
+```sh
+cat philt3r-name.wg.conf | base64 -w 0
+```
+
+And on the other device, decode the string and save to a file:
+```sh
+base64 -d > philt3r-name.wg.conf
+```
+Put the base64 encoded string, and send a EOF (usually `ctrl + d`).
 
 ## Restart WireGuard
 
