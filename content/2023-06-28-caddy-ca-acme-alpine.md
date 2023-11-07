@@ -350,7 +350,7 @@ On every device you want to trust your certificates, you will need to download t
 - OSX: [Trust the certificate](https://tosbourn.com/getting-os-x-to-trust-self-signed-ssl-certificates/)
 - iOS: Download the certificate from the device and [trust it](https://support.apple.com/en-us/HT204477)
 - Firefox: Install the certificate on your system and [tell firefox to trust it](https://support.mozilla.org/en-US/kb/setting-certificate-authorities-firefox)
-- Ubuntu (but should work for other linux distros): [Trust the certificate](https://ubuntu.com/server/docs/security-trust-store)
+- Linux distros: [Ubuntu](https://ubuntu.com/server/docs/security-trust-store), [Fedora](https://docs.fedoraproject.org/en-US/quick-docs/using-shared-system-certificates)
 
 # Start on boot
 
