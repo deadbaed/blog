@@ -4,10 +4,18 @@ description = "broke my bed now it's dead"
 # The URL the site will be built for
 base_url = "https://blog.x4m3.rocks"
 
+# css
 compile_sass = true
 
+# rss
 generate_feed = true
 feed_filename = "atom.xml"
+
+# search
+default_language = "en"
+build_search_index = true
+[search]
+index_format = "elasticlunr_json"
 
 [markdown]
 highlight_code = true
