@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Dynamic MOTD on Alpine Linux &middot; deadbaed</title>
+    <meta name="description" content="broke my bed now it&amp;#x27;s dead" />
+    <link rel="shortcut icon"  href="https://blog.x4m3.rocks/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="https://blog.x4m3.rocks/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://blog.x4m3.rocks/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://blog.x4m3.rocks/favicon-16x16.png">
+    <link rel="mask-icon" href="https://blog.x4m3.rocks/safari-pinned-tab.svg" color="#5bbad5">
+
+    <link rel="alternate" type="application/atom+xml" title="RSS" href="https://blog.x4m3.rocks/atom.xml">
+
+    <style>html,body{background:#fffaf7;color:#2d2d2d;font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol"}a,a:visited{color:darkred;text-decoration:none}a:hover{text-decoration:underline}main{margin:auto;max-width:38rem;padding:.8rem}pre{background:#fff;overflow:scroll;padding:1rem}td{border:1px solid #2d2d2d;padding:10px}img{height:auto;max-width:100%}.homepage-list{list-style:none;padding:1rem 0}.homepage-list li{align-items:center;display:flex;flex-wrap:wrap;justify-content:space-between;margin-bottom:10px}@media (max-width: 38rem){.homepage-list li a{width:100%}}</style>
+
+    <meta property="og:site_name" content="deadbaed">
+      
+      <meta property="og:title" content="Dynamic MOTD on Alpine Linux">
+      <meta property="og:description" content="">
+      <meta property="og:url" content="https://blog.x4m3.rocks/dynamic-motd-alpine/">
+      <meta property="og:image" content="">
+
+      <meta property="og:type" content="article" />
+        <meta property="article:published_time" content="2023-06-30T00:00:00+00:00" />
+
+      
+      
+    
+
+    <script defer data-domain="blog.x4m3.rocks" src="https://plausible.y.z.x4m3.rocks/js/script.js"></script>
+  </head>
+  
+
+  <body>
+    <main id="main" role="main">
+
+      
+      <header role="banner">
+        <h3 style="margin-top:0;">
+          <a href="https://blog.x4m3.rocks" title="Home">deadbaed</a>
+          <br /><small>broke my bed now it&#x27;s dead</small>
+        </h3>
+
+        <div class="search-container">
+          <input type="text" id="search" placeholder="Search..." style="width: 100%;">
+          <div class="search-results">
+            <div class="search-results__items"></div>
+          </div>
+        </div>
+      </header>
+      <hr />
+      
+
+      
+<article>
+  <h1>Dynamic MOTD on Alpine Linux</h1>
+
+  
+    <p style="font-size:90%;">Posted on <time datetime="2023-06-30T00:00:00+00:00">June 30, 2023</time></p>
+  
+
+  <p>When we sign in to our server, the message of the day (MOTD) is pretty lame. Let's get something better!</p>
+<p>This is the default MOTD of alpine:</p>
+<pre style="background-color:#fcf0ca;color:#282828aa;"><code><span>Welcome to Alpine!
+</span><span>
+</span><span>The Alpine Wiki contains a large amount of how-to guides and general
+</span><span>information about administrating Alpine systems.
+</span><span>See &lt;http://wiki.alpinelinux.org&gt;.
+</span><span>
+</span><span>You can setup the system with the command: setup-alpine
+</span><span>
+</span><span>You may change this message by editing /etc/motd.
+</span></code></pre>
+<p>And here's my new MOTD. I even show the WireGuard ip address:</p>
+<pre style="background-color:#fcf0ca;color:#282828aa;"><code><span>
+</span><span>
+</span><span>  Name: intra.philt3r
+</span><span>  Kernel: 6.1.35-0-lts
+</span><span>  Distro: Alpine Linux v3.18
+</span><span>  Version 3.18.2
+</span><span>
+</span><span>  Uptime: 0 days, 0 hours, 22 minutes
+</span><span>  CPU Load: 0.00, 0.00, 0.00
+</span><span>
+</span><span>  Memory: 468M
+</span><span>  Free Memory: 217M
+</span><span>
+</span><span>  Disk: 6.6G
+</span><span>  Free Disk: 6.6G
+</span><span>
+</span><span>  eth0 Address: 192.168.1.71
+</span><span>  wg0 Address: 10.131.111.1
+</span><span>
+</span><span>
+</span></code></pre>
+<p>Start and enable cron at startup (it should be installed by default):</p>
+<pre data-lang="sh" style="background-color:#fcf0ca;color:#282828aa;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#282828;">rc-service crond start
+</span><span style="color:#282828;">rc-update add crond
+</span></code></pre>
+<p>Let's run a script every 15 minutes to update the <code>/etc/motd</code> file:</p>
+<pre style="background-color:#fcf0ca;color:#282828aa;"><code><span>/etc/periodic/15min/motd
+</span></code></pre>
+<p>Here's the content of my MOTD:</p>
+<pre data-lang="sh" style="background-color:#fcf0ca;color:#282828aa;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="font-style:italic;color:#928374;">#!/bin/sh
+</span><span style="font-style:italic;color:#928374;">#. /etc/os-release
+</span><span style="color:#282828;">PRETTY_NAME</span><span style="color:#b23c15;">=</span><span style="color:#282828;">`awk -F</span><span style="color:#b23c15;">= </span><span style="color:#79740e;">&#39;$1==&quot;PRETTY_NAME&quot; { print $2 ;}&#39;</span><span style="color:#282828;"> /etc/os-release </span><span style="color:#b23c15;">| </span><span style="color:#282828;">tr -d </span><span style="color:#79740e;">&#39;&quot;&#39;</span><span style="color:#282828;">`
+</span><span style="color:#282828;">VERSION_ID</span><span style="color:#b23c15;">=</span><span style="color:#282828;">`awk -F</span><span style="color:#b23c15;">= </span><span style="color:#79740e;">&#39;$1==&quot;VERSION_ID&quot; { print $2 ;}&#39;</span><span style="color:#282828;"> /etc/os-release`
+</span><span style="color:#282828;">UPTIME_DAYS</span><span style="color:#b23c15;">=</span><span style="color:#79740e;">$(</span><span style="color:#282828;">expr `cat /proc/uptime </span><span style="color:#b23c15;">| </span><span style="color:#282828;">cut -d </span><span style="color:#79740e;">&#39;.&#39;</span><span style="color:#282828;"> -f1` % 31556926 / 86400</span><span style="color:#79740e;">)
+</span><span style="color:#282828;">UPTIME_HOURS</span><span style="color:#b23c15;">=</span><span style="color:#79740e;">$(</span><span style="color:#282828;">expr `cat /proc/uptime </span><span style="color:#b23c15;">| </span><span style="color:#282828;">cut -d </span><span style="color:#79740e;">&#39;.&#39;</span><span style="color:#282828;"> -f1` % 31556926 % 86400 / 3600</span><span style="color:#79740e;">)
+</span><span style="color:#282828;">UPTIME_MINUTES</span><span style="color:#b23c15;">=</span><span style="color:#79740e;">$(</span><span style="color:#282828;">expr `cat /proc/uptime </span><span style="color:#b23c15;">| </span><span style="color:#282828;">cut -d </span><span style="color:#79740e;">&#39;.&#39;</span><span style="color:#282828;"> -f1` % 31556926 % 86400 % 3600 / 60</span><span style="color:#79740e;">)
+</span><span style="color:#282828;">cat </span><span style="color:#b23c15;">&gt;</span><span style="color:#282828;"> /etc/motd </span><span style="color:#b23c15;">&lt;&lt; </span><span style="color:#9d0006;">EOF
+</span><span style="color:#282828;">
+</span><span style="color:#282828;">
+</span><span style="color:#282828;">  Name: `hostname`
+</span><span style="color:#282828;">  Kernel: `uname -r`
+</span><span style="color:#282828;">  Distro: $PRETTY_NAME
+</span><span style="color:#282828;">  Version $VERSION_ID
+</span><span style="color:#282828;">
+</span><span style="color:#282828;">  Uptime: $UPTIME_DAYS days, $UPTIME_HOURS hours, $UPTIME_MINUTES minutes
+</span><span style="color:#282828;">  CPU Load: `cat /proc/loadavg </span><span style="color:#b23c15;">| </span><span style="color:#282828;">awk </span><span style="color:#79740e;">&#39;{print $1 &quot;, &quot; $2 &quot;, &quot; $3}&#39;</span><span style="color:#282828;">`
+</span><span style="color:#282828;">
+</span><span style="color:#282828;">  Memory: `free -m </span><span style="color:#b23c15;">| </span><span style="color:#282828;">head -n 2 </span><span style="color:#b23c15;">| </span><span style="color:#282828;">tail -n 1 </span><span style="color:#b23c15;">| </span><span style="color:#282828;">awk {</span><span style="color:#79740e;">&#39;print  $2&#39;</span><span style="color:#282828;">}`M
+</span><span style="color:#282828;">  Free Memory: `free -m </span><span style="color:#b23c15;">| </span><span style="color:#282828;">head -n 2 </span><span style="color:#b23c15;">| </span><span style="color:#282828;">tail -n 1 </span><span style="color:#b23c15;">| </span><span style="color:#282828;">awk {</span><span style="color:#79740e;">&#39;print $4&#39;</span><span style="color:#282828;">}`M
+</span><span style="color:#282828;">
+</span><span style="color:#282828;">  Disk: `df -h / </span><span style="color:#b23c15;">| </span><span style="color:#282828;">awk  </span><span style="color:#79740e;">&#39;{ a = $2 } END { print a }&#39;</span><span style="color:#282828;">`
+</span><span style="color:#282828;">  Free Disk: `df -h / </span><span style="color:#b23c15;">| </span><span style="color:#282828;">awk </span><span style="color:#79740e;">&#39;{ a =  $2 } END { print a }&#39;</span><span style="color:#282828;">`
+</span><span style="color:#282828;">
+</span><span style="color:#282828;">  eth0 Address: `ifconfig eth0 </span><span style="color:#b23c15;">| </span><span style="color:#282828;">grep </span><span style="color:#79740e;">&quot;inet addr&quot; </span><span style="color:#b23c15;">|  </span><span style="color:#282828;">awk -F: </span><span style="color:#79740e;">&#39;{print $2}&#39; </span><span style="color:#b23c15;">| </span><span style="color:#282828;">awk </span><span style="color:#79740e;">&#39;{print $1}&#39;</span><span style="color:#282828;">`
+</span><span style="color:#282828;">  wg0 Address: `ifconfig wg0 </span><span style="color:#b23c15;">| </span><span style="color:#282828;">grep </span><span style="color:#79740e;">&quot;inet addr&quot; </span><span style="color:#b23c15;">|  </span><span style="color:#282828;">awk -F: </span><span style="color:#79740e;">&#39;{print $2}&#39; </span><span style="color:#b23c15;">| </span><span style="color:#282828;">awk </span><span style="color:#79740e;">&#39;{print $1}&#39;</span><span style="color:#282828;">`
+</span><span style="color:#282828;">
+</span><span style="color:#282828;">
+</span><span style="color:#9d0006;">EOF
+</span></code></pre>
+<p>Make the script executable, and check if it's good:</p>
+<pre data-lang="sh" style="background-color:#fcf0ca;color:#282828aa;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#282828;">chmod a+x /etc/periodic/15min/motd
+</span><span style="color:#282828;">run-parts --test /etc/periodic/15min
+</span></code></pre>
+<p>If you're lazy and don't want to wait 15 minutes, run the script directly:</p>
+<pre data-lang="sh" style="background-color:#fcf0ca;color:#282828aa;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#282828;">/etc/periodic/15min/motd
+</span></code></pre>
+<p>Log out and log back in, you should see the new MOTD!</p>
+<h1 id="resources">Resources</h1>
+<p><a href="https://kingtam.win/archives/apline-custom.html">https://kingtam.win/archives/apline-custom.html</a></p>
+<p>I just copy/pasted and changed the MOTD.</p>
+
+</article>
+
+
+      
+      <footer role="contentinfo">
+        <hr />
+        
+        <nav style="margin-bottom:1rem;" role="navigation">
+          
+            <a href="https://blog.x4m3.rocks/atom.xml">RSS</a>
+            
+              <span>&middot;</span>
+            
+          
+            <a href="https://philippeloctaux.com">Website</a>
+            
+          
+        </nav>
+        
+        
+        
+      </footer>
+      
+
+    </main>
+    
+    
+
+    <script type="text/javascript" src="https://blog.x4m3.rocks/elasticlunr.min.js"></script>
+    <script type="text/javascript" src="https://blog.x4m3.rocks/search.js"></script>
+  </body>
+</html>
+

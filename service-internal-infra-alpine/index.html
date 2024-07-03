@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Setup a service on our internal infrastructure on Alpine Linux &middot; deadbaed</title>
+    <meta name="description" content="broke my bed now it&amp;#x27;s dead" />
+    <link rel="shortcut icon"  href="https://blog.x4m3.rocks/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="https://blog.x4m3.rocks/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://blog.x4m3.rocks/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://blog.x4m3.rocks/favicon-16x16.png">
+    <link rel="mask-icon" href="https://blog.x4m3.rocks/safari-pinned-tab.svg" color="#5bbad5">
+
+    <link rel="alternate" type="application/atom+xml" title="RSS" href="https://blog.x4m3.rocks/atom.xml">
+
+    <style>html,body{background:#fffaf7;color:#2d2d2d;font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol"}a,a:visited{color:darkred;text-decoration:none}a:hover{text-decoration:underline}main{margin:auto;max-width:38rem;padding:.8rem}pre{background:#fff;overflow:scroll;padding:1rem}td{border:1px solid #2d2d2d;padding:10px}img{height:auto;max-width:100%}.homepage-list{list-style:none;padding:1rem 0}.homepage-list li{align-items:center;display:flex;flex-wrap:wrap;justify-content:space-between;margin-bottom:10px}@media (max-width: 38rem){.homepage-list li a{width:100%}}</style>
+
+    <meta property="og:site_name" content="deadbaed">
+      
+      <meta property="og:title" content="Setup a service on our internal infrastructure on Alpine Linux">
+      <meta property="og:description" content="">
+      <meta property="og:url" content="https://blog.x4m3.rocks/service-internal-infra-alpine/">
+      <meta property="og:image" content="">
+
+      <meta property="og:type" content="article" />
+        <meta property="article:published_time" content="2023-07-02T00:00:00+00:00" />
+
+      
+      
+    
+
+    <script defer data-domain="blog.x4m3.rocks" src="https://plausible.y.z.x4m3.rocks/js/script.js"></script>
+  </head>
+  
+
+  <body>
+    <main id="main" role="main">
+
+      
+      <header role="banner">
+        <h3 style="margin-top:0;">
+          <a href="https://blog.x4m3.rocks" title="Home">deadbaed</a>
+          <br /><small>broke my bed now it&#x27;s dead</small>
+        </h3>
+
+        <div class="search-container">
+          <input type="text" id="search" placeholder="Search..." style="width: 100%;">
+          <div class="search-results">
+            <div class="search-results__items"></div>
+          </div>
+        </div>
+      </header>
+      <hr />
+      
+
+      
+<article>
+  <h1>Setup a service on our internal infrastructure on Alpine Linux</h1>
+
+  
+    <p style="font-size:90%;">Posted on <time datetime="2023-07-02T00:00:00+00:00">July 02, 2023</time></p>
+  
+
+  <p>Now we have a basic internal infrastructure with:</p>
+<ul>
+<li>Everything hidden and encrypted through the network (WireGuard)</li>
+<li>Pretty internal domain names instead of raw ip addresses (CoreDNS)</li>
+<li>A basic http server just in case (Caddy)</li>
+<li>Our own TLS certificates that are easy to get (Step CA)</li>
+</ul>
+<p>But everything is on the same machine. While it could be okay, I will host the services I want on other machines.</p>
+<p>I will run them on the same Proxmox cluster, but the possibilities are endless (as long you can get WireGuard running).</p>
+<h1 id="get-started">Get started</h1>
+<p>Install Alpine. Setup ssh and repositories.</p>
+<h1 id="wireguard">WireGuard</h1>
+<p>We will set up WireGuard, but not a server, a regular peer that will connect to the WireGuard server.</p>
+<p>Create a new peer on the WireGuard server, and get the config file ready.</p>
+<h2 id="install">Install</h2>
+<p>Install WireGuard:</p>
+<pre data-lang="sh" style="background-color:#fcf0ca;color:#282828aa;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#282828;">apk add wireguard-tools
+</span></code></pre>
+<p>To load the WireGuard module on startup, edit</p>
+<pre style="background-color:#fcf0ca;color:#282828aa;"><code><span>/etc/modules
+</span></code></pre>
+<p>and simply add</p>
+<pre style="background-color:#fcf0ca;color:#282828aa;"><code><span>wireguard
+</span></code></pre>
+<p>and reboot.</p>
+<h2 id="configure">Configure</h2>
+<p>Put the WireGuard config to</p>
+<pre style="background-color:#fcf0ca;color:#282828aa;"><code><span>/etc/wireguard/wg0.conf
+</span></code></pre>
+<h2 id="start">Start</h2>
+<p>Copy the <code>init.d</code> script for WireGuard like we did for the original server.</p>
+<p>And ask it to start on boot.</p>
+<p>Reboot and make sure everything works, you should see WireGuard logs when the machine is starting.</p>
+<p>And the DNS should be working! Try to ping an internal DNS name.</p>
+<p>Sometimes the DNS will go back to the system's default (probably your DHCP server's), so force the DNS as seen in the post about CoreDNS.</p>
+<h1 id="dns-entry">DNS entry</h1>
+<p>In the main server, edit CoreDNS to add a new DNS entry for the newly added peer.</p>
+<p>Save and restart CoreDNS.</p>
+<h1 id="motd">MOTD</h1>
+<p>Add the dynamic MOTD if you feel like it. I did.</p>
+<h1 id="reverse-proxy">Reverse proxy</h1>
+<p>Before installing and starting services, let's add a reverse proxy for security + some sweet TLS certs.</p>
+<p>I'll be using caddy. You will need to enable the <code>community</code> repo first.</p>
+<pre data-lang="sh" style="background-color:#fcf0ca;color:#282828aa;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#282828;">apk add caddy
+</span></code></pre>
+<p>Let's get a hello world:</p>
+<pre data-lang="sh" style="background-color:#fcf0ca;color:#282828aa;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#282828;">/etc/caddy/Caddyfile
+</span></code></pre>
+<pre style="background-color:#fcf0ca;color:#282828aa;"><code><span># global
+</span><span>{
+</span><span>        # step-ca ACME server
+</span><span>        acme_ca https://10.131.111.1:444/acme/acme/directory
+</span><span>}
+</span><span>
+</span><span>docker.philt3r docker.philt3r:80 {
+</span><span>    respond &quot;Hello, world!&quot;
+</span><span>}
+</span></code></pre>
+<p>I start the service on ports <code>80</code> and <code>443</code> to get the initial TLS certificate, I will remove access on port <code>80</code> afterward.</p>
+<p>Don't start caddy yet.</p>
+<h1 id="tls-certificates">TLS certificates</h1>
+<p>On our new server, we need to trust the root ca. Download the root ca, and ask the system to trust it:</p>
+<pre data-lang="sh" style="background-color:#fcf0ca;color:#282828aa;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#282828;">apk add ca-certificates ca-certificates-bundle
+</span><span style="color:#282828;">wget --no-check-certificate https://10.131.111.1:444/roots.pem -O /usr/local/share/ca-certificates/philt3r.crt
+</span><span style="color:#282828;">update-ca-certificates 
+</span></code></pre>
+<p>Now we can start caddy and enable it on boot:</p>
+<pre data-lang="sh" style="background-color:#fcf0ca;color:#282828aa;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#282828;">rc-service caddy start
+</span><span style="color:#282828;">rc-update add caddy
+</span></code></pre>
+<p>You should get a Hello World on port 443. If you do, you can disable access from port <code>80</code> in the Caddyfile and restart caddy.</p>
+<h1 id="install-the-service">Install the service</h1>
+<p>Now we can install the service we want to host, start it, and configure caddy to be a reverse proxy for it.</p>
+<p>Repeat the process for the other services you want to host.</p>
+<p>Protip: serve the services on <code>127.0.0.1</code> and use caddy to restrict access only from the WireGuard peers (since there is the DNS restriction).</p>
+<p>Sample <code>Caddyfile</code>:</p>
+<pre style="background-color:#fcf0ca;color:#282828aa;"><code><span># global
+</span><span>{
+</span><span>        # step-ca ACME server
+</span><span>        acme_ca https://10.131.111.1:444/acme/acme/directory
+</span><span>}
+</span><span>
+</span><span>docker.philt3r {
+</span><span>        reverse_proxy 127.0.0.1:3000
+</span><span>}
+</span></code></pre>
+<h1 id="docker">Docker</h1>
+<p>Since I'll be using Docker to host most services, I'll install it:</p>
+<pre data-lang="sh" style="background-color:#fcf0ca;color:#282828aa;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#282828;">apk add docker docker-compose
+</span><span style="color:#282828;">rc-update add docker
+</span><span style="color:#282828;">rc-service docker start
+</span></code></pre>
+<p>Then spin up your docker containers and route them with caddy.</p>
+
+</article>
+
+
+      
+      <footer role="contentinfo">
+        <hr />
+        
+        <nav style="margin-bottom:1rem;" role="navigation">
+          
+            <a href="https://blog.x4m3.rocks/atom.xml">RSS</a>
+            
+              <span>&middot;</span>
+            
+          
+            <a href="https://philippeloctaux.com">Website</a>
+            
+          
+        </nav>
+        
+        
+        
+      </footer>
+      
+
+    </main>
+    
+    
+
+    <script type="text/javascript" src="https://blog.x4m3.rocks/elasticlunr.min.js"></script>
+    <script type="text/javascript" src="https://blog.x4m3.rocks/search.js"></script>
+  </body>
+</html>
+

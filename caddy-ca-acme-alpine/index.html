@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Setup Caddy with a CA and ACME server on Alpine Linux &middot; deadbaed</title>
+    <meta name="description" content="broke my bed now it&amp;#x27;s dead" />
+    <link rel="shortcut icon"  href="https://blog.x4m3.rocks/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="https://blog.x4m3.rocks/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://blog.x4m3.rocks/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://blog.x4m3.rocks/favicon-16x16.png">
+    <link rel="mask-icon" href="https://blog.x4m3.rocks/safari-pinned-tab.svg" color="#5bbad5">
+
+    <link rel="alternate" type="application/atom+xml" title="RSS" href="https://blog.x4m3.rocks/atom.xml">
+
+    <style>html,body{background:#fffaf7;color:#2d2d2d;font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol"}a,a:visited{color:darkred;text-decoration:none}a:hover{text-decoration:underline}main{margin:auto;max-width:38rem;padding:.8rem}pre{background:#fff;overflow:scroll;padding:1rem}td{border:1px solid #2d2d2d;padding:10px}img{height:auto;max-width:100%}.homepage-list{list-style:none;padding:1rem 0}.homepage-list li{align-items:center;display:flex;flex-wrap:wrap;justify-content:space-between;margin-bottom:10px}@media (max-width: 38rem){.homepage-list li a{width:100%}}</style>
+
+    <meta property="og:site_name" content="deadbaed">
+      
+      <meta property="og:title" content="Setup Caddy with a CA and ACME server on Alpine Linux">
+      <meta property="og:description" content="">
+      <meta property="og:url" content="https://blog.x4m3.rocks/caddy-ca-acme-alpine/">
+      <meta property="og:image" content="">
+
+      <meta property="og:type" content="article" />
+        <meta property="article:published_time" content="2023-06-28T00:00:00+00:00" />
+
+      
+      
+    
+
+    <script defer data-domain="blog.x4m3.rocks" src="https://plausible.y.z.x4m3.rocks/js/script.js"></script>
+  </head>
+  
+
+  <body>
+    <main id="main" role="main">
+
+      
+      <header role="banner">
+        <h3 style="margin-top:0;">
+          <a href="https://blog.x4m3.rocks" title="Home">deadbaed</a>
+          <br /><small>broke my bed now it&#x27;s dead</small>
+        </h3>
+
+        <div class="search-container">
+          <input type="text" id="search" placeholder="Search..." style="width: 100%;">
+          <div class="search-results">
+            <div class="search-results__items"></div>
+          </div>
+        </div>
+      </header>
+      <hr />
+      
+
+      
+<article>
+  <h1>Setup Caddy with a CA and ACME server on Alpine Linux</h1>
+
+  
+    <p style="font-size:90%;">Posted on <time datetime="2023-06-28T00:00:00+00:00">June 28, 2023</time></p>
+  
+
+  <p>Now that we have a WireGuard VPN with an awesome internal DNS server, let's get a web server with HTTPS!</p>
+<h1 id="caddy">Caddy</h1>
+<h2 id="install">Install</h2>
+<p>You will need to enable the <code>community</code> repo first.</p>
+<pre data-lang="sh" style="background-color:#fcf0ca;color:#282828aa;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#282828;">doas apk add caddy
+</span></code></pre>
+<h2 id="configuration">Configuration</h2>
+<p>Create a folder to serve stuff from, I placed it in</p>
+<pre style="background-color:#fcf0ca;color:#282828aa;"><code><span>/srv/www
+</span></code></pre>
+<p>Create the config in</p>
+<pre data-lang="sh" style="background-color:#fcf0ca;color:#282828aa;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#282828;">/etc/caddy/Caddyfile
+</span></code></pre>
+<p>Here's the config, it's very simple to get started:</p>
+<pre style="background-color:#fcf0ca;color:#282828aa;"><code><span>intra.philt3r:80
+</span><span>root * /srv/www
+</span><span>file_server browse
+</span></code></pre>
+<p>This config will only launch an HTTP server, the HTTPS will come later.</p>
+<p>It should work only from the WireGuard peers, since they can resolve the DNS name <code>intra.philt3r</code>.</p>
+<p>If there is no <code>index.html</code> in the folder, it will serve static files directly.</p>
+<h2 id="script-to-launch">Script to launch</h2>
+<p>Caddy already has a service!</p>
+<ul>
+<li>Start: <code>rc-service caddy start</code></li>
+<li>Stop: <code>rc-service caddy stop</code></li>
+<li>Reload configuration without downtime: <code>rc-service caddy reload</code></li>
+</ul>
+<h1 id="generate-keys-and-certificates">Generate keys and certificates</h1>
+<p>We will generate the Root CA, the Intermediate CA.</p>
+<p>Generate these with <code>openssl</code> installed on a computer, preferabbly offline.</p>
+<p>Make sure the keys are stored in a safe place, I will store mine inside of a KeePassXC keystore.</p>
+<h2 id="openssl-configuration">OpenSSL Configuration</h2>
+<p>inside a folder, create a file</p>
+<pre style="background-color:#fcf0ca;color:#282828aa;"><code><span>config.conf
+</span></code></pre>
+<p>In <code>[CA_root]</code>, make sure to put your folder <code>dir</code></p>
+<pre data-lang="ini" style="background-color:#fcf0ca;color:#282828aa;" class="language-ini "><code class="language-ini" data-lang="ini"><span style="font-style:italic;color:#928374;"># OpenSSL root CA configuration file.
+</span><span>
+</span><span style="color:#9d0006;">[ ca ]
+</span><span style="font-style:italic;color:#928374;"># `man ca`
+</span><span style="color:#282828;">default_ca </span><span style="color:#b23c15;">=</span><span> CA_root
+</span><span>
+</span><span style="color:#9d0006;">[ CA_root ]
+</span><span style="font-style:italic;color:#928374;"># Directory and file locations.
+</span><span style="color:#282828;">dir               </span><span style="color:#b23c15;">= /</span><span>home</span><span style="color:#b23c15;">/</span><span>phil</span><span style="color:#b23c15;">/</span><span>ca
+</span><span style="color:#282828;">certs             </span><span style="color:#b23c15;">= </span><span style="color:#9d0006;">$dir</span><span style="color:#b23c15;">/</span><span>certs
+</span><span style="color:#282828;">crl_dir           </span><span style="color:#b23c15;">= </span><span style="color:#9d0006;">$dir</span><span style="color:#b23c15;">/</span><span>crl
+</span><span style="color:#282828;">new_certs_dir     </span><span style="color:#b23c15;">= </span><span style="color:#9d0006;">$dir</span><span style="color:#b23c15;">/</span><span>newcerts
+</span><span style="color:#282828;">database          </span><span style="color:#b23c15;">= </span><span style="color:#9d0006;">$dir</span><span style="color:#b23c15;">/</span><span>index</span><span style="color:#b23c15;">.</span><span>txt
+</span><span style="color:#282828;">serial            </span><span style="color:#b23c15;">= </span><span style="color:#9d0006;">$dir</span><span style="color:#b23c15;">/</span><span>serial
+</span><span style="color:#b57614;">RANDFILE          </span><span style="color:#b23c15;">= </span><span style="color:#9d0006;">$dir</span><span style="color:#b23c15;">/</span><span>private</span><span style="color:#b23c15;">/.</span><span>rand
+</span><span>
+</span><span style="font-style:italic;color:#928374;"># The root key and root certificate.
+</span><span style="font-style:italic;color:#928374;"># Match names with Smallstep naming convention
+</span><span style="color:#282828;">private_key       </span><span style="color:#b23c15;">= </span><span style="color:#9d0006;">$dir</span><span style="color:#b23c15;">/</span><span>root_ca_key
+</span><span style="color:#282828;">certificate       </span><span style="color:#b23c15;">= </span><span style="color:#9d0006;">$dir</span><span style="color:#b23c15;">/</span><span>root_ca</span><span style="color:#b23c15;">.</span><span>crt
+</span><span>
+</span><span style="font-style:italic;color:#928374;"># For certificate revocation lists.
+</span><span style="color:#282828;">crlnumber         </span><span style="color:#b23c15;">= </span><span style="color:#9d0006;">$dir</span><span style="color:#b23c15;">/</span><span>crlnumber
+</span><span style="color:#282828;">crl               </span><span style="color:#b23c15;">= </span><span style="color:#9d0006;">$dir</span><span style="color:#b23c15;">/</span><span>crl</span><span style="color:#b23c15;">/</span><span>ca</span><span style="color:#b23c15;">.</span><span>crl</span><span style="color:#b23c15;">.</span><span>pem
+</span><span style="color:#282828;">crl_extensions    </span><span style="color:#b23c15;">=</span><span> crl_ext
+</span><span style="color:#282828;">default_crl_days  </span><span style="color:#b23c15;">= </span><span style="color:#8f3f71;">30
+</span><span>
+</span><span style="font-style:italic;color:#928374;"># SHA-1 is deprecated, so use SHA-2 instead.
+</span><span style="color:#282828;">default_md        </span><span style="color:#b23c15;">=</span><span> sha256
+</span><span>
+</span><span style="color:#282828;">name_opt          </span><span style="color:#b23c15;">=</span><span> ca_default
+</span><span style="color:#282828;">cert_opt          </span><span style="color:#b23c15;">=</span><span> ca_default
+</span><span style="color:#282828;">default_days      </span><span style="color:#b23c15;">= </span><span style="color:#8f3f71;">25202
+</span><span style="color:#282828;">preserve          </span><span style="color:#b23c15;">= </span><span style="color:#8f3f71;">no
+</span><span style="color:#282828;">policy            </span><span style="color:#b23c15;">=</span><span> policy_strict
+</span><span>
+</span><span style="color:#9d0006;">[ policy_strict ]
+</span><span style="font-style:italic;color:#928374;"># The root CA should only sign intermediate certificates that match.
+</span><span style="font-style:italic;color:#928374;"># See the POLICY FORMAT section of `man ca`.
+</span><span style="color:#282828;">countryName             </span><span style="color:#b23c15;">=</span><span> match
+</span><span style="color:#282828;">stateOrProvinceName 	</span><span style="color:#b23c15;">=</span><span> supplied
+</span><span style="color:#282828;">localityName	    	</span><span style="color:#b23c15;">=</span><span> supplied
+</span><span style="color:#282828;">organizationName        </span><span style="color:#b23c15;">=</span><span> match
+</span><span style="color:#282828;">commonName              </span><span style="color:#b23c15;">=</span><span> supplied
+</span><span>
+</span><span style="color:#9d0006;">[ req ]
+</span><span style="font-style:italic;color:#928374;"># Options for the `req` tool (`man req`).
+</span><span style="color:#282828;">default_bits        </span><span style="color:#b23c15;">= </span><span style="color:#8f3f71;">4096
+</span><span style="color:#282828;">distinguished_name  </span><span style="color:#b23c15;">=</span><span> req_distinguished_name
+</span><span style="color:#282828;">string_mask         </span><span style="color:#b23c15;">=</span><span> utf8only
+</span><span>
+</span><span style="font-style:italic;color:#928374;"># SHA-1 is deprecated, so use SHA-2 instead.
+</span><span style="color:#282828;">default_md          </span><span style="color:#b23c15;">=</span><span> sha256
+</span><span>
+</span><span style="font-style:italic;color:#928374;"># Extension to add when the -x509 option is used.
+</span><span style="color:#282828;">x509_extensions     </span><span style="color:#b23c15;">=</span><span> v3_ca
+</span><span>
+</span><span style="color:#9d0006;">[ req_distinguished_name ]
+</span><span style="font-style:italic;color:#928374;"># See &lt;https://en.wikipedia.org/wiki/Certificate_signing_request&gt;.
+</span><span style="color:#282828;">countryName          </span><span style="color:#b23c15;">=</span><span> Country (</span><span style="color:#8f3f71;">2</span><span> letter code)
+</span><span style="color:#282828;">stateOrProvinceName  </span><span style="color:#b23c15;">=</span><span> State or Region
+</span><span style="color:#282828;">localityName         </span><span style="color:#b23c15;">=</span><span> City
+</span><span style="color:#282828;">commonName           </span><span style="color:#b23c15;">=</span><span> Common Name
+</span><span style="color:#8f3f71;">0</span><span style="color:#b23c15;">.</span><span>organizationName   </span><span style="color:#b23c15;">=</span><span> Organization Name
+</span><span>
+</span><span style="color:#9d0006;">[ v3_ca ]
+</span><span style="font-style:italic;color:#928374;"># Extensions for a typical CA (`man x509v3_config`).
+</span><span style="color:#282828;">subjectKeyIdentifier </span><span style="color:#b23c15;">=</span><span> hash
+</span><span style="color:#282828;">authorityKeyIdentifier </span><span style="color:#b23c15;">=</span><span> keyid</span><span style="color:#b23c15;">:</span><span>always</span><span style="color:#b23c15;">,</span><span>issuer
+</span><span style="color:#282828;">basicConstraints </span><span style="color:#b23c15;">=</span><span> critical</span><span style="color:#b23c15;">, </span><span style="color:#b57614;">CA</span><span style="color:#b23c15;">:</span><span style="color:#8f3f71;">true
+</span><span style="color:#282828;">keyUsage </span><span style="color:#b23c15;">=</span><span> critical</span><span style="color:#b23c15;">,</span><span> digitalSignature</span><span style="color:#b23c15;">,</span><span> cRLSign</span><span style="color:#b23c15;">,</span><span> keyCertSign
+</span><span>
+</span><span style="color:#9d0006;">[ v3_intermediate_ca ]
+</span><span style="font-style:italic;color:#928374;"># Extensions for a typical intermediate CA (`man x509v3_config`).
+</span><span style="color:#282828;">subjectKeyIdentifier </span><span style="color:#b23c15;">=</span><span> hash
+</span><span style="color:#282828;">authorityKeyIdentifier </span><span style="color:#b23c15;">=</span><span> keyid</span><span style="color:#b23c15;">:</span><span>always</span><span style="color:#b23c15;">,</span><span>issuer
+</span><span style="color:#282828;">basicConstraints </span><span style="color:#b23c15;">=</span><span> critical</span><span style="color:#b23c15;">, </span><span style="color:#b57614;">CA</span><span style="color:#b23c15;">:</span><span style="color:#8f3f71;">true</span><span style="color:#b23c15;">,</span><span> pathlen</span><span style="color:#b23c15;">:</span><span style="color:#8f3f71;">0
+</span><span style="color:#282828;">keyUsage </span><span style="color:#b23c15;">=</span><span> critical</span><span style="color:#b23c15;">,</span><span> digitalSignature</span><span style="color:#b23c15;">,</span><span> cRLSign</span><span style="color:#b23c15;">,</span><span> keyCertSign
+</span><span>
+</span></code></pre>
+<p>After, run</p>
+<pre data-lang="sh" style="background-color:#fcf0ca;color:#282828aa;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#282828;">mkdir newcerts
+</span><span style="color:#282828;">touch index.txt
+</span><span style="color:#b57614;">echo</span><span style="color:#282828;"> 1420 </span><span style="color:#b23c15;">&gt;</span><span style="color:#282828;"> serial
+</span></code></pre>
+<p>We are now ready to generate keys and certificates.</p>
+<h2 id="root-key-and-certificate">Root key and certificate</h2>
+<p>Generate key:</p>
+<pre data-lang="sh" style="background-color:#fcf0ca;color:#282828aa;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#282828;">openssl genrsa -aes256 -out root_ca_key 4096
+</span></code></pre>
+<p>It will ask for a passphrase, I generated mine with my KeePassXC.</p>
+<p>Generate root certificate:</p>
+<pre data-lang="sh" style="background-color:#fcf0ca;color:#282828aa;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#282828;">openssl req -config config.conf -key root_ca_key -days 3650 -new -x509 -sha256 -extensions v3_ca -out root_ca.crt
+</span></code></pre>
+<p>My root CA will last for 3650 days (10 years).</p>
+<p>Here's the info I provided:</p>
+<pre style="background-color:#fcf0ca;color:#282828aa;"><code><span>Country (2 letter code) []:FR
+</span><span>State or Region []:Bretagne
+</span><span>City []:Rennes
+</span><span>Common Name []:philt3r CA
+</span><span>Organization Name []:philt3r
+</span></code></pre>
+<p>I saved the <code>root_ca_key</code> and <code>root_ca.crt</code> inside my KeePassXC.</p>
+<h2 id="intermediate-key-and-certificate">Intermediate key and certificate</h2>
+<p>Generate key:</p>
+<pre data-lang="sh" style="background-color:#fcf0ca;color:#282828aa;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#282828;">openssl genrsa -aes256 -out intermediate_ca_key 4096
+</span></code></pre>
+<p>It will ask for a passphrase, I generated mine with my KeePassXC.</p>
+<p>Generate certificate request:</p>
+<pre data-lang="sh" style="background-color:#fcf0ca;color:#282828aa;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#282828;">openssl req -config config.conf -new -sha256 -key intermediate_ca_key -out intermediate_ca.csr.pem
+</span></code></pre>
+<p>Here's the info I provided:</p>
+<pre style="background-color:#fcf0ca;color:#282828aa;"><code><span>Country (2 letter code) []:FR
+</span><span>State or Region []:Bretagne
+</span><span>City []:Rennes
+</span><span>Common Name []:philt3r Intermediate CA 
+</span><span>Organization Name []:philt3r
+</span></code></pre>
+<p>Sign certificate request with Root key:</p>
+<pre data-lang="sh" style="background-color:#fcf0ca;color:#282828aa;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#282828;">openssl ca -config config.conf -keyfile root_ca_key -cert root_ca.crt -extensions v3_intermediate_ca -days 1825 -notext -md sha256 -in intermediate_ca.csr.pem -out intermediate_ca.crt
+</span></code></pre>
+<p>My Intermediate certificate will last for 1825 days (5 years).</p>
+<p>Save these files, I saved them in my KeePassXC:</p>
+<ul>
+<li><code>intermediate_ca_key</code></li>
+<li><code>intermediate_ca.csr.pem</code></li>
+<li><code>intermediate_ca.crt</code></li>
+</ul>
+<p>Once everything is saved and backed up, delete everything from your computer securely.</p>
+<h1 id="ca-and-acme-server">CA and ACME server</h1>
+<p>I discovered <a href="https://smallstep.com/">Smallstep</a>, which allows to become your own ACME server.</p>
+<h2 id="install-1">Install</h2>
+<p>They provide packages for Alpine!</p>
+<p>Install the packages with</p>
+<pre data-lang="sh" style="background-color:#fcf0ca;color:#282828aa;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#282828;">apk add step-cli step-certificates
+</span></code></pre>
+<h2 id="configuration-1">Configuration</h2>
+<p>Start by creating the folder where <code>step</code> will save all the configs:</p>
+<pre data-lang="sh" style="background-color:#fcf0ca;color:#282828aa;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#282828;">mkdir /etc/step-ca -p
+</span></code></pre>
+<p>Let's configure <code>step-ca</code>!</p>
+<pre data-lang="sh" style="background-color:#fcf0ca;color:#282828aa;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#282828;">STEPPATH</span><span style="color:#b23c15;">=</span><span style="color:#79740e;">/etc/step-ca </span><span style="color:#282828;">step ca init --name</span><span style="color:#b23c15;">=</span><span style="color:#79740e;">&quot;philt3r&quot;</span><span style="color:#282828;"> --acme --address</span><span style="color:#b23c15;">=</span><span style="color:#79740e;">&quot;10.131.111.1:444&quot;</span><span style="color:#282828;"> --provisioner</span><span style="color:#b23c15;">=</span><span style="color:#79740e;">&quot;philt3r&quot;</span><span style="color:#282828;"> --deployment-type standalone
+</span></code></pre>
+<p>I ask it to run on the address <code>10.131.111.1</code> (the WireGuard ip) and on the port <code>444</code>. The port <code>443</code> will be used for a https server, so I picked 443 + 1.</p>
+<p>Since I want an ACME server, I asked to get one.</p>
+<p>Step will ask what IP address the clients will use to reach your ca, reply with <code>10.131.111.1</code>, because only WireGuard peers and the server should be allowed.</p>
+<p>This will prompt a password, put one.</p>
+<p>Step will generate a root and intermediate key, as well as an intermediate certificate. We don't want that, since we already generated our own.</p>
+<p>Copy these files in <code>/etc/step-ca/certs</code>:</p>
+<ul>
+<li><code>root_ca.crt</code></li>
+<li><code>intermediate_ca.crt</code></li>
+</ul>
+<p>Copy <code>intermediate_ca_key</code> in <code>/etc/step-ca/secrets</code> folder. I use the key directly, but in a safe environment use a Yubikey, but I don't have one.</p>
+<h2 id="start-the-ca-acme-server">Start the CA/ACME server</h2>
+<p>Run</p>
+<pre data-lang="sh" style="background-color:#fcf0ca;color:#282828aa;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#282828;">step-ca /etc/step-ca/config/ca.json
+</span></code></pre>
+<p>to start the server. It will ask your password to decrypt the <code>intermediate_ca_key</code>. Provide the password.</p>
+<p>The server should start, stop it.</p>
+<p>We will now create a file containing the password of the <code>intermediate_ca_key</code>, since we want to have the ACME server starting when Alpine will boot.</p>
+<p>Why put the password inside a file? Well, simply because we can't type the password at boot. Again, in an ideal environment, use a Yubikey.</p>
+<p>Create a file at</p>
+<pre style="background-color:#fcf0ca;color:#282828aa;"><code><span>/etc/step-ca/password.txt
+</span></code></pre>
+<p>and place the password inside that file.</p>
+<p><code>step</code> should run as the user <code>step-ca</code>, so update the permissions on the config folder:</p>
+<pre data-lang="sh" style="background-color:#fcf0ca;color:#282828aa;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#282828;">chown step-ca:step-ca -Rv /etc/step-ca/
+</span></code></pre>
+<p>To verify that everything worked, run:</p>
+<pre data-lang="sh" style="background-color:#fcf0ca;color:#282828aa;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#282828;">step-ca /etc/step-ca/config/ca.json --password-file</span><span style="color:#b23c15;">=</span><span style="color:#282828;">/etc/step-ca/password.txt
+</span></code></pre>
+<p>Stop the server again.</p>
+<h2 id="script-to-launch-1">Script to launch</h2>
+<p>Step already has a service!</p>
+<ul>
+<li>Start: <code>rc-service step-ca start</code></li>
+<li>Stop: <code>rc-service step-ca stop</code></li>
+</ul>
+<h1 id="use-acme-with-caddy">Use ACME with Caddy</h1>
+<p>Now let's tell Caddy to get TLS certificates with our ACME server.</p>
+<p>Edit the <code>/etc/caddy/Caddyfile</code>:</p>
+<pre style="background-color:#fcf0ca;color:#282828aa;"><code><span># global
+</span><span>{
+</span><span>        # step-ca ACME server
+</span><span>        acme_ca https://10.131.111.1:444/acme/acme/directory
+</span><span>}
+</span><span>
+</span><span>intra.philt3r intra.philt3r:80 {
+</span><span>        root * /srv/www
+</span><span>        file_server browse
+</span><span>}
+</span></code></pre>
+<p>Make sure <code>step-ca</code> is started, and restart Caddy to make sure everything is good:</p>
+<pre data-lang="sh" style="background-color:#fcf0ca;color:#282828aa;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#282828;">rc-service caddy restart
+</span></code></pre>
+<p>Now we need to tell our system to trust the certificates.</p>
+<p>Download the file containing the certificates. It is available at this URL:</p>
+<pre style="background-color:#fcf0ca;color:#282828aa;"><code><span>https://10.131.111.1:444/roots.pem
+</span></code></pre>
+<p>On every device you want to trust your certificates, you will need to download the file on the device, then you will need to tell your operating system to trust it.</p>
+<ul>
+<li>OSX: <a href="https://tosbourn.com/getting-os-x-to-trust-self-signed-ssl-certificates/">Trust the certificate</a></li>
+<li>iOS: Download the certificate from the device and <a href="https://support.apple.com/en-us/HT204477">trust it</a></li>
+<li>Firefox: Install the certificate on your system and <a href="https://support.mozilla.org/en-US/kb/setting-certificate-authorities-firefox">tell firefox to trust it</a></li>
+<li>Linux distros: <a href="https://ubuntu.com/server/docs/security-trust-store">Ubuntu</a>, <a href="https://docs.fedoraproject.org/en-US/quick-docs/using-shared-system-certificates">Fedora</a></li>
+</ul>
+<h1 id="start-on-boot">Start on boot</h1>
+<p>Start <code>caddy</code> and <code>step-ca</code> on startup with:</p>
+<pre data-lang="sh" style="background-color:#fcf0ca;color:#282828aa;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#282828;">rc-update add step-ca
+</span><span style="color:#282828;">rc-update add caddy
+</span></code></pre>
+<p>Reboot to make sure everything works.</p>
+<h1 id="resources">Resources</h1>
+<ul>
+<li><a href="https://wiki.alpinelinux.org/wiki/Repositories">https://wiki.alpinelinux.org/wiki/Repositories</a></li>
+<li>Awesome guide that helped me a lot: <a href="https://www.apalrd.net/posts/2023/network_acme/">https://www.apalrd.net/posts/2023/network_acme/</a></li>
+</ul>
+
+</article>
+
+
+      
+      <footer role="contentinfo">
+        <hr />
+        
+        <nav style="margin-bottom:1rem;" role="navigation">
+          
+            <a href="https://blog.x4m3.rocks/atom.xml">RSS</a>
+            
+              <span>&middot;</span>
+            
+          
+            <a href="https://philippeloctaux.com">Website</a>
+            
+          
+        </nav>
+        
+        
+        
+      </footer>
+      
+
+    </main>
+    
+    
+
+    <script type="text/javascript" src="https://blog.x4m3.rocks/elasticlunr.min.js"></script>
+    <script type="text/javascript" src="https://blog.x4m3.rocks/search.js"></script>
+  </body>
+</html>
+

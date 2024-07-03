@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Setup a private Docker registry &middot; deadbaed</title>
+    <meta name="description" content="broke my bed now it&amp;#x27;s dead" />
+    <link rel="shortcut icon"  href="https://blog.x4m3.rocks/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="https://blog.x4m3.rocks/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://blog.x4m3.rocks/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://blog.x4m3.rocks/favicon-16x16.png">
+    <link rel="mask-icon" href="https://blog.x4m3.rocks/safari-pinned-tab.svg" color="#5bbad5">
+
+    <link rel="alternate" type="application/atom+xml" title="RSS" href="https://blog.x4m3.rocks/atom.xml">
+
+    <style>html,body{background:#fffaf7;color:#2d2d2d;font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol"}a,a:visited{color:darkred;text-decoration:none}a:hover{text-decoration:underline}main{margin:auto;max-width:38rem;padding:.8rem}pre{background:#fff;overflow:scroll;padding:1rem}td{border:1px solid #2d2d2d;padding:10px}img{height:auto;max-width:100%}.homepage-list{list-style:none;padding:1rem 0}.homepage-list li{align-items:center;display:flex;flex-wrap:wrap;justify-content:space-between;margin-bottom:10px}@media (max-width: 38rem){.homepage-list li a{width:100%}}</style>
+
+    <meta property="og:site_name" content="deadbaed">
+      
+      <meta property="og:title" content="Setup a private Docker registry">
+      <meta property="og:description" content="">
+      <meta property="og:url" content="https://blog.x4m3.rocks/docker-private-registry/">
+      <meta property="og:image" content="">
+
+      <meta property="og:type" content="article" />
+        <meta property="article:published_time" content="2023-07-15T00:00:00+00:00" />
+
+      
+      
+    
+
+    <script defer data-domain="blog.x4m3.rocks" src="https://plausible.y.z.x4m3.rocks/js/script.js"></script>
+  </head>
+  
+
+  <body>
+    <main id="main" role="main">
+
+      
+      <header role="banner">
+        <h3 style="margin-top:0;">
+          <a href="https://blog.x4m3.rocks" title="Home">deadbaed</a>
+          <br /><small>broke my bed now it&#x27;s dead</small>
+        </h3>
+
+        <div class="search-container">
+          <input type="text" id="search" placeholder="Search..." style="width: 100%;">
+          <div class="search-results">
+            <div class="search-results__items"></div>
+          </div>
+        </div>
+      </header>
+      <hr />
+      
+
+      
+<article>
+  <h1>Setup a private Docker registry</h1>
+
+  
+    <p style="font-size:90%;">Posted on <time datetime="2023-07-15T00:00:00+00:00">July 15, 2023</time></p>
+  
+
+  <p>My internal infrastructure is complete. I can now work on my projects, but at some point they need to go out to the world!</p>
+<p>The platform for most of my projects is the web, and the best tool I found so far to deploy them is Docker.</p>
+<p>I want to keep the code on the private infrastructure, but I also want to be in control of where the docker images will be stored.</p>
+<p>The perfect solution is a private Docker registry! But it will not be on the internal infrastructure, it will be publicly available on a regular server.</p>
+<p>That way, projects can be deployed in their final form whenever and wherever, while the source remaining private.</p>
+<h1 id="get-started-locally">Get started locally</h1>
+<p>To start, I will launch a test registry on my machine to make sure everything works.</p>
+<p>I will use these docker images:</p>
+<ul>
+<li><a href="https://hub.docker.com/_/registry">registry</a>: The official registry made by Docker themselves</li>
+<li><a href="https://joxit.dev/docker-registry-ui">docker-registry-ui</a>: A nice webui to view and manage images on the registry</li>
+</ul>
+<p>Here's the docker-compose file I used to get started:</p>
+<pre data-lang="yaml" style="background-color:#fcf0ca;color:#282828aa;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="font-weight:bold;color:#407959;">services</span><span>:
+</span><span>
+</span><span>  </span><span style="font-weight:bold;color:#407959;">registry-server</span><span>:
+</span><span>    </span><span style="font-weight:bold;color:#407959;">image</span><span>: </span><span style="color:#79740e;">registry:2.8.2
+</span><span>    </span><span style="font-weight:bold;color:#407959;">ports</span><span>:
+</span><span>      - </span><span style="color:#79740e;">5000:5000
+</span><span>    </span><span style="font-weight:bold;color:#407959;">volumes</span><span>:
+</span><span>      - </span><span style="color:#79740e;">./registry-data:/var/lib/registry
+</span><span>      - </span><span style="color:#79740e;">./passwords:/auth/htpasswd
+</span><span>    </span><span style="font-weight:bold;color:#407959;">environment</span><span>:
+</span><span>      </span><span style="font-weight:bold;color:#407959;">REGISTRY_AUTH</span><span>: </span><span style="color:#79740e;">&#39;htpasswd&#39;
+</span><span>      </span><span style="font-weight:bold;color:#407959;">REGISTRY_AUTH_HTPASSWD_REALM</span><span>: </span><span style="color:#79740e;">&#39;Registry Realm&#39;
+</span><span>      </span><span style="font-weight:bold;color:#407959;">REGISTRY_AUTH_HTPASSWD_PATH</span><span>: </span><span style="color:#79740e;">&#39;/auth/htpasswd&#39;
+</span><span>      </span><span style="font-weight:bold;color:#407959;">REGISTRY_HTTP_HEADERS_Access-Control-Origin</span><span>: </span><span style="color:#79740e;">&#39;[http://registry.example.com]&#39;
+</span><span>      </span><span style="font-weight:bold;color:#407959;">REGISTRY_HTTP_HEADERS_Access-Control-Allow-Methods</span><span>: </span><span style="color:#79740e;">&#39;[HEAD,GET,OPTIONS,DELETE]&#39;
+</span><span>      </span><span style="font-weight:bold;color:#407959;">REGISTRY_HTTP_HEADERS_Access-Control-Credentials</span><span>: </span><span style="color:#79740e;">&#39;[true]&#39;
+</span><span>      </span><span style="font-weight:bold;color:#407959;">REGISTRY_HTTP_HEADERS_Access-Control-Allow-Headers</span><span>: </span><span style="color:#79740e;">&#39;[Authorization,Accept,Cache-Control]&#39;
+</span><span>      </span><span style="font-weight:bold;color:#407959;">REGISTRY_HTTP_HEADERS_Access-Control-Expose-Headers</span><span>: </span><span style="color:#79740e;">&#39;[Docker-Content-Digest]&#39;
+</span><span>      </span><span style="font-weight:bold;color:#407959;">REGISTRY_STORAGE_DELETE_ENABLED</span><span>: </span><span style="color:#79740e;">&#39;true&#39;
+</span><span>    </span><span style="font-weight:bold;color:#407959;">container_name</span><span>: </span><span style="color:#79740e;">registry-server
+</span><span>
+</span><span>  </span><span style="font-weight:bold;color:#407959;">registry-ui</span><span>:
+</span><span>    </span><span style="font-weight:bold;color:#407959;">image</span><span>: </span><span style="color:#79740e;">joxit/docker-registry-ui:2.5.0
+</span><span>    </span><span style="font-weight:bold;color:#407959;">ports</span><span>:
+</span><span>      - </span><span style="color:#79740e;">8001:80
+</span><span>    </span><span style="font-weight:bold;color:#407959;">environment</span><span>:
+</span><span>      </span><span style="font-weight:bold;color:#407959;">SINGLE_REGISTRY</span><span>: </span><span style="color:#8f3f71;">true
+</span><span>      </span><span style="font-weight:bold;color:#407959;">REGISTRY_TITLE</span><span>: </span><span style="color:#79740e;">Docker Registry UI
+</span><span>      </span><span style="font-weight:bold;color:#407959;">DELETE_IMAGES</span><span>: </span><span style="color:#8f3f71;">true
+</span><span>      </span><span style="font-weight:bold;color:#407959;">SHOW_CONTENT_DIGEST</span><span>: </span><span style="color:#8f3f71;">true
+</span><span>      </span><span style="font-weight:bold;color:#407959;">NGINX_PROXY_PASS_URL</span><span>: </span><span style="color:#79740e;">http://registry-server:5000
+</span><span>      </span><span style="font-weight:bold;color:#407959;">SHOW_CATALOG_NB_TAGS</span><span>: </span><span style="color:#8f3f71;">true
+</span><span>      </span><span style="font-weight:bold;color:#407959;">CATALOG_MIN_BRANCHES</span><span>: </span><span style="color:#8f3f71;">1
+</span><span>      </span><span style="font-weight:bold;color:#407959;">CATALOG_MAX_BRANCHES</span><span>: </span><span style="color:#8f3f71;">1
+</span><span>      </span><span style="font-weight:bold;color:#407959;">TAGLIST_PAGE_SIZE</span><span>: </span><span style="color:#8f3f71;">100
+</span><span>      </span><span style="font-weight:bold;color:#407959;">REGISTRY_SECURED</span><span>: </span><span style="color:#8f3f71;">false
+</span><span>      </span><span style="font-weight:bold;color:#407959;">CATALOG_ELEMENTS_LIMIT</span><span>: </span><span style="color:#8f3f71;">1000
+</span><span>    </span><span style="font-weight:bold;color:#407959;">container_name</span><span>: </span><span style="color:#79740e;">registry-ui
+</span></code></pre>
+<p>But don't start the services right away.</p>
+<h1 id="authentication">Authentication</h1>
+<p>I don't want the registry being open to everyone though, let's add some authentication.</p>
+<p>To keep things simple, I will use HTTP basic auth. If you want, there's a possibility to have a more <a href="https://docs.docker.com/registry/spec/auth/">complex setup</a>.</p>
+<p>Here's a quick script to get passwords in a format that Docker will accept:</p>
+<pre data-lang="sh" style="background-color:#fcf0ca;color:#282828aa;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="font-style:italic;color:#928374;">#!/bin/sh
+</span><span style="font-style:italic;color:#928374;">#
+</span><span style="font-style:italic;color:#928374;"># new-password.sh
+</span><span>
+</span><span style="color:#9d0006;">if </span><span style="color:#b57614;">[ </span><span style="color:#282828;">-z </span><span style="color:#79740e;">&quot;$</span><span style="color:#282828;">1</span><span style="color:#79740e;">&quot; </span><span style="color:#b57614;">]
+</span><span style="color:#9d0006;">then
+</span><span style="color:#b57614;">echo </span><span style="color:#79740e;">&quot;usage: $</span><span style="color:#282828;">0</span><span style="color:#79740e;"> username&quot;
+</span><span style="color:#b57614;">exit</span><span style="color:#282828;"> 1
+</span><span style="color:#9d0006;">fi
+</span><span>
+</span><span style="color:#b57614;">echo </span><span style="color:#79740e;">&quot;creating password for user \&quot;$</span><span style="color:#282828;">1</span><span style="color:#79740e;">\&quot;&quot;
+</span><span style="color:#282828;">htpasswd -nB $1
+</span></code></pre>
+<p>How to use it:</p>
+<pre data-lang="sh" style="background-color:#fcf0ca;color:#282828aa;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#282828;">$ ./new-password.sh phil
+</span><span style="color:#282828;">creating password for user </span><span style="color:#79740e;">&quot;phil&quot;
+</span><span style="color:#282828;">New password: phil
+</span><span style="color:#282828;">Re-type new password: phil
+</span><span style="color:#282828;">phil:$2y$05$asxsqfmEQJpg8zuKGyieMOmTirok.Gd/noliF.y48DJXe.97ufGHG
+</span></code></pre>
+<p>Copy the last line in the <code>passwords</code> file (see the <code>docker-compose</code> file).</p>
+<p>Repeat the process for every user you want to give authentication to your registry.</p>
+<p>Keep in mind I only cover <strong>AUTHENTICATION</strong> (who can access the registry), and not <strong>AUTHORIZATION</strong> (who can do what on the registry). With this setup, if you have access to the registry, you can do anything on it.</p>
+<h1 id="use-the-registry">Use the registry</h1>
+<p>Start the services with</p>
+<pre data-lang="sh" style="background-color:#fcf0ca;color:#282828aa;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#282828;">docker compose up
+</span></code></pre>
+<p>Now, you can access the webui by going to</p>
+<pre style="background-color:#fcf0ca;color:#282828aa;"><code><span>http://localhost:8001
+</span></code></pre>
+<p>in a web browser and sign-in with your credentials. You should see an empty list. Let's add some images!</p>
+<h2 id="naming-images">Naming images</h2>
+<p>Pick an image you want on the registry.</p>
+<p>If it's an existing image:</p>
+<pre data-lang="sh" style="background-color:#fcf0ca;color:#282828aa;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#282828;">docker tag name-of-existing-image localhost:5000/existing-image-name
+</span></code></pre>
+<p>If you build the image directly:</p>
+<pre data-lang="sh" style="background-color:#fcf0ca;color:#282828aa;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#282828;">docker build -t localhost:5000/new-image-name
+</span></code></pre>
+<p>The name of the image must have the domain of the registry, in our case it's <code>localhost:5000</code>.</p>
+<h2 id="login-to-registry">Login to registry</h2>
+<p>To sign in to the registry, use</p>
+<pre data-lang="sh" style="background-color:#fcf0ca;color:#282828aa;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#282828;">docker login localhost:5000
+</span></code></pre>
+<p>and enter your credentials.</p>
+<h2 id="push-pull">Push / Pull</h2>
+<p>Simply run the usual docker command to push or pull images. Docker will know which registry to use based of the image's name.</p>
+<pre data-lang="sh" style="background-color:#fcf0ca;color:#282828aa;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#282828;">docker push localhost:5000/new-image-name
+</span><span style="color:#282828;">docker pull localhost:5000/existing-image-name
+</span></code></pre>
+<p>That's pretty much it!</p>
+<h1 id="deploy-to-production">Deploy to production</h1>
+<p>I use <a href="https://caprover.com">Caprover</a> to deploy my docker images easily, it comes with a reverse proxy and automatic TLS certificates with Let's encrypt.</p>
+<p>Here's the one-click-app config I created for the registry:</p>
+<pre data-lang="yaml" style="background-color:#fcf0ca;color:#282828aa;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="font-weight:bold;color:#407959;">captainVersion</span><span>: </span><span style="color:#8f3f71;">4
+</span><span>
+</span><span style="font-weight:bold;color:#407959;">services</span><span>:
+</span><span>  </span><span style="font-weight:bold;color:#407959;">$$cap_appname-registry</span><span>:
+</span><span>    </span><span style="font-weight:bold;color:#407959;">image</span><span>: </span><span style="color:#79740e;">registry:$$cap_registry_version
+</span><span>    </span><span style="font-weight:bold;color:#407959;">volumes</span><span>:
+</span><span>      - </span><span style="color:#79740e;">$$cap_appname-data:/var/lib/registry
+</span><span>      - </span><span style="color:#79740e;">$$cap_appname-auth:/auth/
+</span><span>    </span><span style="font-weight:bold;color:#407959;">environment</span><span>:
+</span><span>      </span><span style="font-weight:bold;color:#407959;">REGISTRY_AUTH</span><span>: </span><span style="color:#79740e;">&#39;htpasswd&#39;
+</span><span>      </span><span style="font-weight:bold;color:#407959;">REGISTRY_AUTH_HTPASSWD_REALM</span><span>: </span><span style="color:#79740e;">&#39;Registry Realm&#39;
+</span><span>      </span><span style="font-weight:bold;color:#407959;">REGISTRY_AUTH_HTPASSWD_PATH</span><span>: </span><span style="color:#79740e;">&#39;/auth/htpasswd&#39;
+</span><span>      </span><span style="font-weight:bold;color:#407959;">REGISTRY_HTTP_HEADERS_Access-Control-Origin</span><span>: </span><span style="color:#79740e;">&#39;[https://$$cap_appname-registry.$$cap_root_domain, https://$$cap_appname-ui.$$cap_root_domain]&#39;
+</span><span>      </span><span style="font-weight:bold;color:#407959;">REGISTRY_HTTP_HEADERS_Access-Control-Allow-Methods</span><span>: </span><span style="color:#79740e;">&#39;[HEAD,GET,OPTIONS,DELETE]&#39;
+</span><span>      </span><span style="font-weight:bold;color:#407959;">REGISTRY_HTTP_HEADERS_Access-Control-Credentials</span><span>: </span><span style="color:#79740e;">&#39;[true]&#39;
+</span><span>      </span><span style="font-weight:bold;color:#407959;">REGISTRY_HTTP_HEADERS_Access-Control-Allow-Headers</span><span>: </span><span style="color:#79740e;">&#39;[Authorization,Accept,Cache-Control]&#39;
+</span><span>      </span><span style="font-weight:bold;color:#407959;">REGISTRY_HTTP_HEADERS_Access-Control-Expose-Headers</span><span>: </span><span style="color:#79740e;">&#39;[Docker-Content-Digest]&#39;
+</span><span>      </span><span style="font-weight:bold;color:#407959;">REGISTRY_STORAGE_DELETE_ENABLED</span><span>: </span><span style="color:#79740e;">&#39;true&#39;
+</span><span>    </span><span style="font-weight:bold;color:#407959;">caproverExtra</span><span>:
+</span><span>        </span><span style="font-weight:bold;color:#407959;">containerHttpPort</span><span>: </span><span style="color:#79740e;">&#39;5000&#39;
+</span><span>
+</span><span>  </span><span style="font-weight:bold;color:#407959;">$$cap_appname-ui</span><span>:
+</span><span>    </span><span style="font-weight:bold;color:#407959;">image</span><span>: </span><span style="color:#79740e;">joxit/docker-registry-ui:$$cap_ui_version
+</span><span>    </span><span style="font-weight:bold;color:#407959;">environment</span><span>:
+</span><span>      </span><span style="font-weight:bold;color:#407959;">SINGLE_REGISTRY</span><span>: </span><span style="color:#8f3f71;">true
+</span><span>      </span><span style="font-weight:bold;color:#407959;">REGISTRY_TITLE</span><span>: </span><span style="color:#79740e;">Docker Registry UI
+</span><span>      </span><span style="font-weight:bold;color:#407959;">DELETE_IMAGES</span><span>: </span><span style="color:#8f3f71;">true
+</span><span>      </span><span style="font-weight:bold;color:#407959;">SHOW_CONTENT_DIGEST</span><span>: </span><span style="color:#8f3f71;">true
+</span><span>      </span><span style="font-weight:bold;color:#407959;">NGINX_PROXY_PASS_URL</span><span>: </span><span style="color:#79740e;">http://srv-captain--$$cap_appname-registry:5000
+</span><span>      </span><span style="font-weight:bold;color:#407959;">SHOW_CATALOG_NB_TAGS</span><span>: </span><span style="color:#8f3f71;">true
+</span><span>      </span><span style="font-weight:bold;color:#407959;">CATALOG_MIN_BRANCHES</span><span>: </span><span style="color:#8f3f71;">1
+</span><span>      </span><span style="font-weight:bold;color:#407959;">CATALOG_MAX_BRANCHES</span><span>: </span><span style="color:#8f3f71;">1
+</span><span>      </span><span style="font-weight:bold;color:#407959;">TAGLIST_PAGE_SIZE</span><span>: </span><span style="color:#8f3f71;">100
+</span><span>      </span><span style="font-weight:bold;color:#407959;">REGISTRY_SECURED</span><span>: </span><span style="color:#8f3f71;">false
+</span><span>      </span><span style="font-weight:bold;color:#407959;">CATALOG_ELEMENTS_LIMIT</span><span>: </span><span style="color:#8f3f71;">1000
+</span><span>
+</span><span style="font-weight:bold;color:#407959;">caproverOneClickApp</span><span>:
+</span><span>    </span><span style="font-weight:bold;color:#407959;">variables</span><span>:
+</span><span>        - </span><span style="font-weight:bold;color:#407959;">id</span><span>: </span><span style="color:#79740e;">&#39;$$cap_registry_version&#39;
+</span><span>          </span><span style="font-weight:bold;color:#407959;">label</span><span>: </span><span style="color:#79740e;">Registry Version
+</span><span>          </span><span style="font-weight:bold;color:#407959;">defaultValue</span><span>: </span><span style="color:#79740e;">&#39;2.8.2&#39;
+</span><span>          </span><span style="font-weight:bold;color:#407959;">description</span><span>: </span><span style="color:#79740e;">Check out the Docker page for the valid tags https://hub.docker.com/_/registry/tags
+</span><span>          </span><span style="font-weight:bold;color:#407959;">validRegex</span><span>: </span><span style="color:#79740e;">&quot;/.{1,}/&quot;
+</span><span>        - </span><span style="font-weight:bold;color:#407959;">id</span><span>: </span><span style="color:#79740e;">&#39;$$cap_ui_version&#39;
+</span><span>          </span><span style="font-weight:bold;color:#407959;">label</span><span>: </span><span style="color:#79740e;">UI Version
+</span><span>          </span><span style="font-weight:bold;color:#407959;">defaultValue</span><span>: </span><span style="color:#79740e;">&#39;2.5.0&#39;
+</span><span>          </span><span style="font-weight:bold;color:#407959;">description</span><span>: </span><span style="color:#79740e;">Check out the Docker page for the valid tags https://hub.docker.com/r/joxit/docker-registry-ui/tags
+</span><span>          </span><span style="font-weight:bold;color:#407959;">validRegex</span><span>: </span><span style="color:#79740e;">&quot;/.{1,}/&quot;
+</span><span>    </span><span style="font-weight:bold;color:#407959;">instructions</span><span>:
+</span><span>        </span><span style="font-weight:bold;color:#407959;">start</span><span>: </span><span style="color:#9d0006;">|-
+</span><span style="color:#79740e;">            A private docker registry, with a webui to see images
+</span><span>        </span><span style="font-weight:bold;color:#407959;">end</span><span>: </span><span style="color:#9d0006;">|-
+</span><span style="color:#79740e;">            The registry has been deployed! Look in the &quot;auth&quot; volume to update credentials
+</span><span>    </span><span style="font-weight:bold;color:#407959;">displayName</span><span>: </span><span style="color:#79740e;">docker-registry-with-ui
+</span><span>    </span><span style="font-weight:bold;color:#407959;">isOfficial</span><span>: </span><span style="color:#8f3f71;">false
+</span><span>    </span><span style="font-weight:bold;color:#407959;">description</span><span>: </span><span style="color:#79740e;">A private docker registry, with a webui to see images
+</span><span>    </span><span style="font-weight:bold;color:#407959;">documentation</span><span>: </span><span style="color:#79740e;">https://docs.docker.com/registry/
+</span></code></pre>
+
+</article>
+
+
+      
+      <footer role="contentinfo">
+        <hr />
+        
+        <nav style="margin-bottom:1rem;" role="navigation">
+          
+            <a href="https://blog.x4m3.rocks/atom.xml">RSS</a>
+            
+              <span>&middot;</span>
+            
+          
+            <a href="https://philippeloctaux.com">Website</a>
+            
+          
+        </nav>
+        
+        
+        
+      </footer>
+      
+
+    </main>
+    
+    
+
+    <script type="text/javascript" src="https://blog.x4m3.rocks/elasticlunr.min.js"></script>
+    <script type="text/javascript" src="https://blog.x4m3.rocks/search.js"></script>
+  </body>
+</html>
+

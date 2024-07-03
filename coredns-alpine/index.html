@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Setup CoreDNS on Alpine Linux &middot; deadbaed</title>
+    <meta name="description" content="broke my bed now it&amp;#x27;s dead" />
+    <link rel="shortcut icon"  href="https://blog.x4m3.rocks/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="https://blog.x4m3.rocks/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://blog.x4m3.rocks/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://blog.x4m3.rocks/favicon-16x16.png">
+    <link rel="mask-icon" href="https://blog.x4m3.rocks/safari-pinned-tab.svg" color="#5bbad5">
+
+    <link rel="alternate" type="application/atom+xml" title="RSS" href="https://blog.x4m3.rocks/atom.xml">
+
+    <style>html,body{background:#fffaf7;color:#2d2d2d;font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol"}a,a:visited{color:darkred;text-decoration:none}a:hover{text-decoration:underline}main{margin:auto;max-width:38rem;padding:.8rem}pre{background:#fff;overflow:scroll;padding:1rem}td{border:1px solid #2d2d2d;padding:10px}img{height:auto;max-width:100%}.homepage-list{list-style:none;padding:1rem 0}.homepage-list li{align-items:center;display:flex;flex-wrap:wrap;justify-content:space-between;margin-bottom:10px}@media (max-width: 38rem){.homepage-list li a{width:100%}}</style>
+
+    <meta property="og:site_name" content="deadbaed">
+      
+      <meta property="og:title" content="Setup CoreDNS on Alpine Linux">
+      <meta property="og:description" content="">
+      <meta property="og:url" content="https://blog.x4m3.rocks/coredns-alpine/">
+      <meta property="og:image" content="">
+
+      <meta property="og:type" content="article" />
+        <meta property="article:published_time" content="2023-06-25T00:00:00+00:00" />
+
+      
+      
+    
+
+    <script defer data-domain="blog.x4m3.rocks" src="https://plausible.y.z.x4m3.rocks/js/script.js"></script>
+  </head>
+  
+
+  <body>
+    <main id="main" role="main">
+
+      
+      <header role="banner">
+        <h3 style="margin-top:0;">
+          <a href="https://blog.x4m3.rocks" title="Home">deadbaed</a>
+          <br /><small>broke my bed now it&#x27;s dead</small>
+        </h3>
+
+        <div class="search-container">
+          <input type="text" id="search" placeholder="Search..." style="width: 100%;">
+          <div class="search-results">
+            <div class="search-results__items"></div>
+          </div>
+        </div>
+      </header>
+      <hr />
+      
+
+      
+<article>
+  <h1>Setup CoreDNS on Alpine Linux</h1>
+
+  
+    <p style="font-size:90%;">Posted on <time datetime="2023-06-25T00:00:00+00:00">June 25, 2023</time></p>
+  
+
+  <p>Now that we have a WireGuard VPN, let's add a DNS server, to type letters instead of numbers!</p>
+<h1 id="install-coredns">Install CoreDNS</h1>
+<p>You will need to enable the <code>community</code> repo first.</p>
+<pre data-lang="sh" style="background-color:#fcf0ca;color:#282828aa;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#282828;">doas apk add coredns
+</span></code></pre>
+<h1 id="configuration">Configuration</h1>
+<p>Create the config in</p>
+<pre data-lang="sh" style="background-color:#fcf0ca;color:#282828aa;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#282828;">/etc/coredns/Corefile
+</span></code></pre>
+<pre style="background-color:#fcf0ca;color:#282828aa;"><code><span># snippets
+</span><span>(common) {
+</span><span>    cache 60
+</span><span>    acl {
+</span><span>        allow net 127.0.0.1 10.131.110.0/24 10.131.111.0/24
+</span><span>        block
+</span><span>    }
+</span><span>}
+</span><span>
+</span><span># intranet
+</span><span>philt3r {
+</span><span>    import common
+</span><span>    log . {combined} {
+</span><span>        class denial error success
+</span><span>    }
+</span><span>
+</span><span>    hosts {
+</span><span>        10.131.111.1 intra.philt3r
+</span><span>        falltrough
+</span><span>    }
+</span><span>}
+</span><span>
+</span><span># extranet
+</span><span>. {
+</span><span>    import common
+</span><span>
+</span><span>    # Free DNS
+</span><span>    forward . 212.27.40.240 212.27.40.241
+</span><span>}
+</span></code></pre>
+<p>My DNS service of choice comes from <a href="https://free.fr">free.fr</a>. Feel free to put your own favorite DNS service!</p>
+<h1 id="script-to-launch-on-server-startup">Script to launch on server startup</h1>
+<p>CoreDNS already has a service!</p>
+<ul>
+<li>Add at startup: <code>rc-update add coredns</code></li>
+<li>Remove from startup: <code>rc-update del coredns</code></li>
+<li>Show services at startup: <code>rc-status</code></li>
+</ul>
+<p>The logs of CoreDNS should be available at</p>
+<pre style="background-color:#fcf0ca;color:#282828aa;"><code><span>/var/log/coredns/coredns.log
+</span></code></pre>
+<h1 id="use-coredns-on-the-system">Use CoreDNS on the system</h1>
+<p>Now that we have our DNS server, let's use it on our server!</p>
+<p>If you use DHCP to get the ip address of your server, the DNS will always be used from the DHCP.</p>
+<p>We want to use our own DHCP server.</p>
+<p>Create the file (and the folder associated with it)</p>
+<pre style="background-color:#fcf0ca;color:#282828aa;"><code><span>/etc/udhcpc/udhcpc.conf
+</span></code></pre>
+<p>and put</p>
+<pre style="background-color:#fcf0ca;color:#282828aa;"><code><span>RESOLV_CONF=&quot;NO&quot;
+</span></code></pre>
+<p>Then, edit the</p>
+<pre style="background-color:#fcf0ca;color:#282828aa;"><code><span>/etc/resolv.conf
+</span></code></pre>
+<p>and put</p>
+<pre style="background-color:#fcf0ca;color:#282828aa;"><code><span>nameserver 127.0.0.1
+</span></code></pre>
+<p>Restart the server.</p>
+
+</article>
+
+
+      
+      <footer role="contentinfo">
+        <hr />
+        
+        <nav style="margin-bottom:1rem;" role="navigation">
+          
+            <a href="https://blog.x4m3.rocks/atom.xml">RSS</a>
+            
+              <span>&middot;</span>
+            
+          
+            <a href="https://philippeloctaux.com">Website</a>
+            
+          
+        </nav>
+        
+        
+        
+      </footer>
+      
+
+    </main>
+    
+    
+
+    <script type="text/javascript" src="https://blog.x4m3.rocks/elasticlunr.min.js"></script>
+    <script type="text/javascript" src="https://blog.x4m3.rocks/search.js"></script>
+  </body>
+</html>
+
