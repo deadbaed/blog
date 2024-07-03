@@ -247,7 +247,7 @@ Either give the configuration file we just created, or you can have multiple cho
 
 Start by installing
 ```sh
-apk add libqrencode
+apk add libqrencode-tools
 ```
 
 And run 
