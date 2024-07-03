@@ -222,30 +222,12 @@ I discovered [Smallstep](https://smallstep.com/), which allows to become your ow
 
 ## Install
 
-They provide packages for Alpine, but one of them is only in the testing repos.
-
-Edit
-```
-/etc/apk/repositories
-```
-
-And add:
-```
-@testing http://mirrors.ircam.fr/pub/alpine/edge/testing
-```
-
-Afterwards, run
-```sh
-apk update
-```
-to refresh the packages.
+They provide packages for Alpine!
 
 Install the packages with
 ```sh
-apk add step-cli step-certificates@testing
+apk add step-cli step-certificates
 ```
-
-The `@testing` is to tell `apk` to pull the package from the testing repo.
 
 ## Configuration
 
