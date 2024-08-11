@@ -1,0 +1,1409 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+    <title>deadbaed</title>
+    <subtitle>broke my bed now it&#x27;s dead</subtitle>
+    <link href="https://blog.x4m3.rocks/atom.xml" rel="self" type="application/atom+xml"/>
+    <link href="https://blog.x4m3.rocks"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2024-08-10T00:00:00+00:00</updated>
+    <id>https://blog.x4m3.rocks/atom.xml</id>
+    <entry xml:lang="en">
+        <title>Automount a Hetzner Storage Box with sshfs on NixOS</title>
+        <published>2024-08-10T00:00:00+00:00</published>
+        <updated>2024-08-10T00:00:00+00:00</updated>
+        <author>
+          <name>Unknown</name>
+        </author>
+        <link rel="alternate" href="https://blog.x4m3.rocks/hetzner-storagebox-nixos-sshfs-fstab/" type="text/html"/>
+        <id>https://blog.x4m3.rocks/hetzner-storagebox-nixos-sshfs-fstab/</id>
+        
+        <content type="html">&lt;p&gt;I had my eyes on some nice arm64 servers from Hetzner, and I finally pulled the trigger, I got the &lt;code&gt;CAX21&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;It is also the opportunity to reduce time of maintaining my infrastructure, I will use NixOS to setup my server.
+By having a couple of configuration files, it will be easier to review, edit and update the system.&lt;&#x2F;p&gt;
+&lt;p&gt;But time will tell if it is the good decision, and not sticking to a imperative distribution such as Debian.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;not-a-lot-of-storage&quot;&gt;Not a lot of storage&lt;&#x2F;h1&gt;
+&lt;p&gt;The only downside with these servers is the storage -- I only have 80 gigabytes of storage on mine.
+Fortunately, Hetzner has their &lt;strong&gt;Storage Box&lt;&#x2F;strong&gt; offerings, I picked up a &lt;code&gt;BX11&lt;&#x2F;code&gt; which has 1 terabyte of storage!&lt;&#x2F;p&gt;
+&lt;p&gt;The plan is to mount the storage box as a regular drive and have applications use it normally.
+The main applications will be documents, media, backups -- not speed critical data such as databases or logs.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;storage-box-ordering-and-setup&quot;&gt;Storage Box ordering and setup&lt;&#x2F;h1&gt;
+&lt;p&gt;Start by ordering your Storage Box, I think mine took less than an hour to be provisioned and delivered to me.&lt;&#x2F;p&gt;
+&lt;p&gt;On the configuration panel, I only ticked &lt;code&gt;SSH support&lt;&#x2F;code&gt; and the disabled the rest.
+If you will use the storage box outside of the Hetzner network, enable &lt;code&gt;External reachability&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;Finally, you cannot set the password yourself, you will have to reset it.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;ssh-keys&quot;&gt;SSH keys&lt;&#x2F;h1&gt;
+&lt;p&gt;On the server, generate a new ssh key with &lt;code&gt;ssh-keygen&lt;&#x2F;code&gt; which will be used to connect to the storage box.&lt;&#x2F;p&gt;
+&lt;p&gt;Since I want the storage box to be mounted automatically on startup, so I did not set a passphrase on the key.&lt;&#x2F;p&gt;
+&lt;p&gt;Copy the ssh to the storage box with:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;shell&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-shell &quot;&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;&lt;span&gt;ssh-copy-id -p 23 -s user@storagebox.example.org
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;More documentation on ssh keys with storage box: &lt;a href=&quot;https:&#x2F;&#x2F;docs.hetzner.com&#x2F;robot&#x2F;storage-box&#x2F;backup-space-ssh-keys&quot;&gt;https:&#x2F;&#x2F;docs.hetzner.com&#x2F;robot&#x2F;storage-box&#x2F;backup-space-ssh-keys&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;nixos-configuration&quot;&gt;NixOS configuration&lt;&#x2F;h1&gt;
+&lt;p&gt;The easy part, and the reason why I think I will like to use NixOS on my server:&lt;&#x2F;p&gt;
+&lt;p&gt;You can put it inside your &lt;code&gt;configuration.nix&lt;&#x2F;code&gt; directly, I placed it inside its own file.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;nix&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-nix &quot;&gt;&lt;code class=&quot;language-nix&quot; data-lang=&quot;nix&quot;&gt;&lt;span style=&quot;color:#8f3f71;&quot;&gt;{ &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;... &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8f3f71;&quot;&gt;}&lt;&#x2F;span&gt;&lt;span&gt;:
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#407959;&quot;&gt;fileSystems&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;quot;&#x2F;mnt&#x2F;storagebox&amp;quot; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#407959;&quot;&gt;device &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;quot;user@storagebox.example.org:&#x2F;some&#x2F;path&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#407959;&quot;&gt;fsType &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;quot;fuse.sshfs&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#407959;&quot;&gt;options &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span&gt;[
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;quot;identityfile=&#x2F;place&#x2F;to&#x2F;ssh&#x2F;key&#x2F;somewhere&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;quot;idmap=user&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;quot;x-systemd.automount&amp;quot; &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#928374;&quot;&gt;# mount the filesystem automatically on first access
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;quot;allow_other&amp;quot; &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#928374;&quot;&gt;# don&amp;#39;t restrict access to only the user which `mount`s it (because that&amp;#39;s probably systemd who mounts it, not you)
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;quot;user&amp;quot; &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#928374;&quot;&gt;# allow manual `mount`ing, as ordinary user.
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;quot;_netdev&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;    ];
+&lt;&#x2F;span&gt;&lt;span&gt;  };
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#407959;&quot;&gt;boot&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#407959;&quot;&gt;supportedFilesystems&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;quot;fuse.sshfs&amp;quot; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8f3f71;&quot;&gt;true&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Thank you so much to &lt;a href=&quot;https:&#x2F;&#x2F;discourse.nixos.org&#x2F;t&#x2F;how-to-auto-mount-with-sshfs-as-a-normal-user&#x2F;48276&#x2F;3?u=philt3r&quot;&gt;this Discourse post&lt;&#x2F;a&gt; for the configuration snippet!&lt;&#x2F;p&gt;
+&lt;p&gt;Run&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;shell&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-shell &quot;&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;&lt;span&gt;nixos-rebuild switch &amp;amp;&amp;amp; cd &#x2F;mnt&#x2F;storagebox
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;and you are able to read and write files!&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>First setup of Archivebox</title>
+        <published>2024-03-02T00:00:00+00:00</published>
+        <updated>2024-03-02T00:00:00+00:00</updated>
+        <author>
+          <name>Unknown</name>
+        </author>
+        <link rel="alternate" href="https://blog.x4m3.rocks/archivebox-setup/" type="text/html"/>
+        <id>https://blog.x4m3.rocks/archivebox-setup/</id>
+        
+        <content type="html">&lt;p&gt;I discovered &lt;a href=&quot;https:&#x2F;&#x2F;archivebox.io&quot;&gt;Archivebox&lt;&#x2F;a&gt; and decided to install it on my server using containers.&lt;&#x2F;p&gt;
+&lt;p&gt;I just had to make a couple of adjustements, because all the content on the instance is publically available. I do not want that, I want to restrict access with user accounts.&lt;&#x2F;p&gt;
+&lt;p&gt;To do so, start by finding out the container name, and open a shell:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;shell&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-shell &quot;&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;&lt;span&gt;docker exec --user=archivebox -it container-name-goes-here bash
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Go into the directory where Archivebox data is stored, and you will be able to run command to manage the instance.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;hide-everything-from-the-public&quot;&gt;Hide everything from the public&lt;&#x2F;h2&gt;
+&lt;pre data-lang=&quot;shell&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-shell &quot;&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;&lt;span&gt;archivebox config --set SAVE_ARCHIVE_DOT_ORG=False
+&lt;&#x2F;span&gt;&lt;span&gt;archivebox config --set PUBLIC_INDEX=False
+&lt;&#x2F;span&gt;&lt;span&gt;archivebox config --set PUBLIC_SNAPSHOTS=False
+&lt;&#x2F;span&gt;&lt;span&gt;archivebox config --set PUBLIC_ADD_VIEW=False
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h2 id=&quot;create-first-user-account&quot;&gt;Create first user account&lt;&#x2F;h2&gt;
+&lt;p&gt;Now that you cut outside world access to your instance, create an admin user to access and add new content:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;shell&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-shell &quot;&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;&lt;span&gt;archivebox manage createsuperuser
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Once finished, exit the shell and restart Archivebox.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Setup a private Docker registry</title>
+        <published>2023-07-15T00:00:00+00:00</published>
+        <updated>2023-07-15T00:00:00+00:00</updated>
+        <author>
+          <name>Unknown</name>
+        </author>
+        <link rel="alternate" href="https://blog.x4m3.rocks/docker-private-registry/" type="text/html"/>
+        <id>https://blog.x4m3.rocks/docker-private-registry/</id>
+        
+        <content type="html">&lt;p&gt;My internal infrastructure is complete. I can now work on my projects, but at some point they need to go out to the world!&lt;&#x2F;p&gt;
+&lt;p&gt;The platform for most of my projects is the web, and the best tool I found so far to deploy them is Docker.&lt;&#x2F;p&gt;
+&lt;p&gt;I want to keep the code on the private infrastructure, but I also want to be in control of where the docker images will be stored.&lt;&#x2F;p&gt;
+&lt;p&gt;The perfect solution is a private Docker registry! But it will not be on the internal infrastructure, it will be publicly available on a regular server.&lt;&#x2F;p&gt;
+&lt;p&gt;That way, projects can be deployed in their final form whenever and wherever, while the source remaining private.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;get-started-locally&quot;&gt;Get started locally&lt;&#x2F;h1&gt;
+&lt;p&gt;To start, I will launch a test registry on my machine to make sure everything works.&lt;&#x2F;p&gt;
+&lt;p&gt;I will use these docker images:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;hub.docker.com&#x2F;_&#x2F;registry&quot;&gt;registry&lt;&#x2F;a&gt;: The official registry made by Docker themselves&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;joxit.dev&#x2F;docker-registry-ui&quot;&gt;docker-registry-ui&lt;&#x2F;a&gt;: A nice webui to view and manage images on the registry&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Here&#x27;s the docker-compose file I used to get started:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;yaml&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-yaml &quot;&gt;&lt;code class=&quot;language-yaml&quot; data-lang=&quot;yaml&quot;&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;services&lt;&#x2F;span&gt;&lt;span&gt;:
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;registry-server&lt;&#x2F;span&gt;&lt;span&gt;:
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;image&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;registry:2.8.2
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;ports&lt;&#x2F;span&gt;&lt;span&gt;:
+&lt;&#x2F;span&gt;&lt;span&gt;      - &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;5000:5000
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;volumes&lt;&#x2F;span&gt;&lt;span&gt;:
+&lt;&#x2F;span&gt;&lt;span&gt;      - &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;.&#x2F;registry-data:&#x2F;var&#x2F;lib&#x2F;registry
+&lt;&#x2F;span&gt;&lt;span&gt;      - &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;.&#x2F;passwords:&#x2F;auth&#x2F;htpasswd
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;environment&lt;&#x2F;span&gt;&lt;span&gt;:
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;REGISTRY_AUTH&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;#39;htpasswd&amp;#39;
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;REGISTRY_AUTH_HTPASSWD_REALM&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;#39;Registry Realm&amp;#39;
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;REGISTRY_AUTH_HTPASSWD_PATH&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;#39;&#x2F;auth&#x2F;htpasswd&amp;#39;
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;REGISTRY_HTTP_HEADERS_Access-Control-Origin&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;#39;[http:&#x2F;&#x2F;registry.example.com]&amp;#39;
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;REGISTRY_HTTP_HEADERS_Access-Control-Allow-Methods&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;#39;[HEAD,GET,OPTIONS,DELETE]&amp;#39;
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;REGISTRY_HTTP_HEADERS_Access-Control-Credentials&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;#39;[true]&amp;#39;
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;REGISTRY_HTTP_HEADERS_Access-Control-Allow-Headers&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;#39;[Authorization,Accept,Cache-Control]&amp;#39;
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;REGISTRY_HTTP_HEADERS_Access-Control-Expose-Headers&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;#39;[Docker-Content-Digest]&amp;#39;
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;REGISTRY_STORAGE_DELETE_ENABLED&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;#39;true&amp;#39;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;container_name&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;registry-server
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;registry-ui&lt;&#x2F;span&gt;&lt;span&gt;:
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;image&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;joxit&#x2F;docker-registry-ui:2.5.0
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;ports&lt;&#x2F;span&gt;&lt;span&gt;:
+&lt;&#x2F;span&gt;&lt;span&gt;      - &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;8001:80
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;environment&lt;&#x2F;span&gt;&lt;span&gt;:
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;SINGLE_REGISTRY&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8f3f71;&quot;&gt;true
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;REGISTRY_TITLE&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;Docker Registry UI
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;DELETE_IMAGES&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8f3f71;&quot;&gt;true
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;SHOW_CONTENT_DIGEST&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8f3f71;&quot;&gt;true
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;NGINX_PROXY_PASS_URL&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;http:&#x2F;&#x2F;registry-server:5000
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;SHOW_CATALOG_NB_TAGS&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8f3f71;&quot;&gt;true
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;CATALOG_MIN_BRANCHES&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8f3f71;&quot;&gt;1
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;CATALOG_MAX_BRANCHES&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8f3f71;&quot;&gt;1
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;TAGLIST_PAGE_SIZE&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8f3f71;&quot;&gt;100
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;REGISTRY_SECURED&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8f3f71;&quot;&gt;false
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;CATALOG_ELEMENTS_LIMIT&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8f3f71;&quot;&gt;1000
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;container_name&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;registry-ui
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;But don&#x27;t start the services right away.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;authentication&quot;&gt;Authentication&lt;&#x2F;h1&gt;
+&lt;p&gt;I don&#x27;t want the registry being open to everyone though, let&#x27;s add some authentication.&lt;&#x2F;p&gt;
+&lt;p&gt;To keep things simple, I will use HTTP basic auth. If you want, there&#x27;s a possibility to have a more &lt;a href=&quot;https:&#x2F;&#x2F;docs.docker.com&#x2F;registry&#x2F;spec&#x2F;auth&#x2F;&quot;&gt;complex setup&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;Here&#x27;s a quick script to get passwords in a format that Docker will accept:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;font-style:italic;color:#928374;&quot;&gt;#!&#x2F;bin&#x2F;sh
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#928374;&quot;&gt;#
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#928374;&quot;&gt;# new-password.sh
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#9d0006;&quot;&gt;if &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b57614;&quot;&gt;[ &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;-z &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;quot;$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;quot; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b57614;&quot;&gt;]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#9d0006;&quot;&gt;then
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b57614;&quot;&gt;echo &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;quot;usage: $&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt; username&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b57614;&quot;&gt;exit&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt; 1
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#9d0006;&quot;&gt;fi
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b57614;&quot;&gt;echo &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;quot;creating password for user \&amp;quot;$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;\&amp;quot;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;htpasswd -nB $1
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;How to use it:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;$ .&#x2F;new-password.sh phil
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;creating password for user &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;quot;phil&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;New password: phil
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;Re-type new password: phil
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;phil:$2y$05$asxsqfmEQJpg8zuKGyieMOmTirok.Gd&#x2F;noliF.y48DJXe.97ufGHG
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Copy the last line in the &lt;code&gt;passwords&lt;&#x2F;code&gt; file (see the &lt;code&gt;docker-compose&lt;&#x2F;code&gt; file).&lt;&#x2F;p&gt;
+&lt;p&gt;Repeat the process for every user you want to give authentication to your registry.&lt;&#x2F;p&gt;
+&lt;p&gt;Keep in mind I only cover &lt;strong&gt;AUTHENTICATION&lt;&#x2F;strong&gt; (who can access the registry), and not &lt;strong&gt;AUTHORIZATION&lt;&#x2F;strong&gt; (who can do what on the registry). With this setup, if you have access to the registry, you can do anything on it.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;use-the-registry&quot;&gt;Use the registry&lt;&#x2F;h1&gt;
+&lt;p&gt;Start the services with&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;docker compose up
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Now, you can access the webui by going to&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;http:&#x2F;&#x2F;localhost:8001
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;in a web browser and sign-in with your credentials. You should see an empty list. Let&#x27;s add some images!&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;naming-images&quot;&gt;Naming images&lt;&#x2F;h2&gt;
+&lt;p&gt;Pick an image you want on the registry.&lt;&#x2F;p&gt;
+&lt;p&gt;If it&#x27;s an existing image:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;docker tag name-of-existing-image localhost:5000&#x2F;existing-image-name
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;If you build the image directly:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;docker build -t localhost:5000&#x2F;new-image-name
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The name of the image must have the domain of the registry, in our case it&#x27;s &lt;code&gt;localhost:5000&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;login-to-registry&quot;&gt;Login to registry&lt;&#x2F;h2&gt;
+&lt;p&gt;To sign in to the registry, use&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;docker login localhost:5000
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;and enter your credentials.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;push-pull&quot;&gt;Push &#x2F; Pull&lt;&#x2F;h2&gt;
+&lt;p&gt;Simply run the usual docker command to push or pull images. Docker will know which registry to use based of the image&#x27;s name.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;docker push localhost:5000&#x2F;new-image-name
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;docker pull localhost:5000&#x2F;existing-image-name
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;That&#x27;s pretty much it!&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;deploy-to-production&quot;&gt;Deploy to production&lt;&#x2F;h1&gt;
+&lt;p&gt;I use &lt;a href=&quot;https:&#x2F;&#x2F;caprover.com&quot;&gt;Caprover&lt;&#x2F;a&gt; to deploy my docker images easily, it comes with a reverse proxy and automatic TLS certificates with Let&#x27;s encrypt.&lt;&#x2F;p&gt;
+&lt;p&gt;Here&#x27;s the one-click-app config I created for the registry:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;yaml&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-yaml &quot;&gt;&lt;code class=&quot;language-yaml&quot; data-lang=&quot;yaml&quot;&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;captainVersion&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8f3f71;&quot;&gt;4
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;services&lt;&#x2F;span&gt;&lt;span&gt;:
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;$$cap_appname-registry&lt;&#x2F;span&gt;&lt;span&gt;:
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;image&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;registry:$$cap_registry_version
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;volumes&lt;&#x2F;span&gt;&lt;span&gt;:
+&lt;&#x2F;span&gt;&lt;span&gt;      - &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;$$cap_appname-data:&#x2F;var&#x2F;lib&#x2F;registry
+&lt;&#x2F;span&gt;&lt;span&gt;      - &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;$$cap_appname-auth:&#x2F;auth&#x2F;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;environment&lt;&#x2F;span&gt;&lt;span&gt;:
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;REGISTRY_AUTH&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;#39;htpasswd&amp;#39;
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;REGISTRY_AUTH_HTPASSWD_REALM&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;#39;Registry Realm&amp;#39;
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;REGISTRY_AUTH_HTPASSWD_PATH&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;#39;&#x2F;auth&#x2F;htpasswd&amp;#39;
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;REGISTRY_HTTP_HEADERS_Access-Control-Origin&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;#39;[https:&#x2F;&#x2F;$$cap_appname-registry.$$cap_root_domain, https:&#x2F;&#x2F;$$cap_appname-ui.$$cap_root_domain]&amp;#39;
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;REGISTRY_HTTP_HEADERS_Access-Control-Allow-Methods&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;#39;[HEAD,GET,OPTIONS,DELETE]&amp;#39;
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;REGISTRY_HTTP_HEADERS_Access-Control-Credentials&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;#39;[true]&amp;#39;
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;REGISTRY_HTTP_HEADERS_Access-Control-Allow-Headers&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;#39;[Authorization,Accept,Cache-Control]&amp;#39;
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;REGISTRY_HTTP_HEADERS_Access-Control-Expose-Headers&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;#39;[Docker-Content-Digest]&amp;#39;
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;REGISTRY_STORAGE_DELETE_ENABLED&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;#39;true&amp;#39;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;caproverExtra&lt;&#x2F;span&gt;&lt;span&gt;:
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;containerHttpPort&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;#39;5000&amp;#39;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;$$cap_appname-ui&lt;&#x2F;span&gt;&lt;span&gt;:
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;image&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;joxit&#x2F;docker-registry-ui:$$cap_ui_version
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;environment&lt;&#x2F;span&gt;&lt;span&gt;:
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;SINGLE_REGISTRY&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8f3f71;&quot;&gt;true
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;REGISTRY_TITLE&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;Docker Registry UI
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;DELETE_IMAGES&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8f3f71;&quot;&gt;true
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;SHOW_CONTENT_DIGEST&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8f3f71;&quot;&gt;true
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;NGINX_PROXY_PASS_URL&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;http:&#x2F;&#x2F;srv-captain--$$cap_appname-registry:5000
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;SHOW_CATALOG_NB_TAGS&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8f3f71;&quot;&gt;true
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;CATALOG_MIN_BRANCHES&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8f3f71;&quot;&gt;1
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;CATALOG_MAX_BRANCHES&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8f3f71;&quot;&gt;1
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;TAGLIST_PAGE_SIZE&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8f3f71;&quot;&gt;100
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;REGISTRY_SECURED&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8f3f71;&quot;&gt;false
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;CATALOG_ELEMENTS_LIMIT&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8f3f71;&quot;&gt;1000
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;caproverOneClickApp&lt;&#x2F;span&gt;&lt;span&gt;:
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;variables&lt;&#x2F;span&gt;&lt;span&gt;:
+&lt;&#x2F;span&gt;&lt;span&gt;        - &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;id&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;#39;$$cap_registry_version&amp;#39;
+&lt;&#x2F;span&gt;&lt;span&gt;          &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;label&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;Registry Version
+&lt;&#x2F;span&gt;&lt;span&gt;          &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;defaultValue&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;#39;2.8.2&amp;#39;
+&lt;&#x2F;span&gt;&lt;span&gt;          &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;description&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;Check out the Docker page for the valid tags https:&#x2F;&#x2F;hub.docker.com&#x2F;_&#x2F;registry&#x2F;tags
+&lt;&#x2F;span&gt;&lt;span&gt;          &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;validRegex&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;quot;&#x2F;.{1,}&#x2F;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;        - &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;id&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;#39;$$cap_ui_version&amp;#39;
+&lt;&#x2F;span&gt;&lt;span&gt;          &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;label&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;UI Version
+&lt;&#x2F;span&gt;&lt;span&gt;          &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;defaultValue&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;#39;2.5.0&amp;#39;
+&lt;&#x2F;span&gt;&lt;span&gt;          &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;description&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;Check out the Docker page for the valid tags https:&#x2F;&#x2F;hub.docker.com&#x2F;r&#x2F;joxit&#x2F;docker-registry-ui&#x2F;tags
+&lt;&#x2F;span&gt;&lt;span&gt;          &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;validRegex&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;quot;&#x2F;.{1,}&#x2F;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;instructions&lt;&#x2F;span&gt;&lt;span&gt;:
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;start&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#9d0006;&quot;&gt;|-
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;            A private docker registry, with a webui to see images
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;end&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#9d0006;&quot;&gt;|-
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;            The registry has been deployed! Look in the &amp;quot;auth&amp;quot; volume to update credentials
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;displayName&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;docker-registry-with-ui
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;isOfficial&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8f3f71;&quot;&gt;false
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;description&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;A private docker registry, with a webui to see images
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;font-weight:bold;color:#407959;&quot;&gt;documentation&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;https:&#x2F;&#x2F;docs.docker.com&#x2F;registry&#x2F;
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Setup a service on our internal infrastructure on Alpine Linux</title>
+        <published>2023-07-02T00:00:00+00:00</published>
+        <updated>2023-07-02T00:00:00+00:00</updated>
+        <author>
+          <name>Unknown</name>
+        </author>
+        <link rel="alternate" href="https://blog.x4m3.rocks/service-internal-infra-alpine/" type="text/html"/>
+        <id>https://blog.x4m3.rocks/service-internal-infra-alpine/</id>
+        
+        <content type="html">&lt;p&gt;Now we have a basic internal infrastructure with:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Everything hidden and encrypted through the network (WireGuard)&lt;&#x2F;li&gt;
+&lt;li&gt;Pretty internal domain names instead of raw ip addresses (CoreDNS)&lt;&#x2F;li&gt;
+&lt;li&gt;A basic http server just in case (Caddy)&lt;&#x2F;li&gt;
+&lt;li&gt;Our own TLS certificates that are easy to get (Step CA)&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;But everything is on the same machine. While it could be okay, I will host the services I want on other machines.&lt;&#x2F;p&gt;
+&lt;p&gt;I will run them on the same Proxmox cluster, but the possibilities are endless (as long you can get WireGuard running).&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;get-started&quot;&gt;Get started&lt;&#x2F;h1&gt;
+&lt;p&gt;Install Alpine. Setup ssh and repositories.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;wireguard&quot;&gt;WireGuard&lt;&#x2F;h1&gt;
+&lt;p&gt;We will set up WireGuard, but not a server, a regular peer that will connect to the WireGuard server.&lt;&#x2F;p&gt;
+&lt;p&gt;Create a new peer on the WireGuard server, and get the config file ready.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;install&quot;&gt;Install&lt;&#x2F;h2&gt;
+&lt;p&gt;Install WireGuard:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;apk add wireguard-tools
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;To load the WireGuard module on startup, edit&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;&#x2F;etc&#x2F;modules
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;and simply add&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;wireguard
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;and reboot.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;configure&quot;&gt;Configure&lt;&#x2F;h2&gt;
+&lt;p&gt;Put the WireGuard config to&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;&#x2F;etc&#x2F;wireguard&#x2F;wg0.conf
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h2 id=&quot;start&quot;&gt;Start&lt;&#x2F;h2&gt;
+&lt;p&gt;Copy the &lt;code&gt;init.d&lt;&#x2F;code&gt; script for WireGuard like we did for the original server.&lt;&#x2F;p&gt;
+&lt;p&gt;And ask it to start on boot.&lt;&#x2F;p&gt;
+&lt;p&gt;Reboot and make sure everything works, you should see WireGuard logs when the machine is starting.&lt;&#x2F;p&gt;
+&lt;p&gt;And the DNS should be working! Try to ping an internal DNS name.&lt;&#x2F;p&gt;
+&lt;p&gt;Sometimes the DNS will go back to the system&#x27;s default (probably your DHCP server&#x27;s), so force the DNS as seen in the post about CoreDNS.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;dns-entry&quot;&gt;DNS entry&lt;&#x2F;h1&gt;
+&lt;p&gt;In the main server, edit CoreDNS to add a new DNS entry for the newly added peer.&lt;&#x2F;p&gt;
+&lt;p&gt;Save and restart CoreDNS.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;motd&quot;&gt;MOTD&lt;&#x2F;h1&gt;
+&lt;p&gt;Add the dynamic MOTD if you feel like it. I did.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;reverse-proxy&quot;&gt;Reverse proxy&lt;&#x2F;h1&gt;
+&lt;p&gt;Before installing and starting services, let&#x27;s add a reverse proxy for security + some sweet TLS certs.&lt;&#x2F;p&gt;
+&lt;p&gt;I&#x27;ll be using caddy. You will need to enable the &lt;code&gt;community&lt;&#x2F;code&gt; repo first.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;apk add caddy
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Let&#x27;s get a hello world:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;&#x2F;etc&#x2F;caddy&#x2F;Caddyfile
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;# global
+&lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;        # step-ca ACME server
+&lt;&#x2F;span&gt;&lt;span&gt;        acme_ca https:&#x2F;&#x2F;10.131.111.1:444&#x2F;acme&#x2F;acme&#x2F;directory
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;docker.philt3r docker.philt3r:80 {
+&lt;&#x2F;span&gt;&lt;span&gt;    respond &amp;quot;Hello, world!&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;I start the service on ports &lt;code&gt;80&lt;&#x2F;code&gt; and &lt;code&gt;443&lt;&#x2F;code&gt; to get the initial TLS certificate, I will remove access on port &lt;code&gt;80&lt;&#x2F;code&gt; afterward.&lt;&#x2F;p&gt;
+&lt;p&gt;Don&#x27;t start caddy yet.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;tls-certificates&quot;&gt;TLS certificates&lt;&#x2F;h1&gt;
+&lt;p&gt;On our new server, we need to trust the root ca. Download the root ca, and ask the system to trust it:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;apk add ca-certificates ca-certificates-bundle
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;wget --no-check-certificate https:&#x2F;&#x2F;10.131.111.1:444&#x2F;roots.pem -O &#x2F;usr&#x2F;local&#x2F;share&#x2F;ca-certificates&#x2F;philt3r.crt
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;update-ca-certificates 
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Now we can start caddy and enable it on boot:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;rc-service caddy start
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;rc-update add caddy
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;You should get a Hello World on port 443. If you do, you can disable access from port &lt;code&gt;80&lt;&#x2F;code&gt; in the Caddyfile and restart caddy.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;install-the-service&quot;&gt;Install the service&lt;&#x2F;h1&gt;
+&lt;p&gt;Now we can install the service we want to host, start it, and configure caddy to be a reverse proxy for it.&lt;&#x2F;p&gt;
+&lt;p&gt;Repeat the process for the other services you want to host.&lt;&#x2F;p&gt;
+&lt;p&gt;Protip: serve the services on &lt;code&gt;127.0.0.1&lt;&#x2F;code&gt; and use caddy to restrict access only from the WireGuard peers (since there is the DNS restriction).&lt;&#x2F;p&gt;
+&lt;p&gt;Sample &lt;code&gt;Caddyfile&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;# global
+&lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;        # step-ca ACME server
+&lt;&#x2F;span&gt;&lt;span&gt;        acme_ca https:&#x2F;&#x2F;10.131.111.1:444&#x2F;acme&#x2F;acme&#x2F;directory
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;docker.philt3r {
+&lt;&#x2F;span&gt;&lt;span&gt;        reverse_proxy 127.0.0.1:3000
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h1 id=&quot;docker&quot;&gt;Docker&lt;&#x2F;h1&gt;
+&lt;p&gt;Since I&#x27;ll be using Docker to host most services, I&#x27;ll install it:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;apk add docker docker-compose
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;rc-update add docker
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;rc-service docker start
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Then spin up your docker containers and route them with caddy.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Dynamic MOTD on Alpine Linux</title>
+        <published>2023-06-30T00:00:00+00:00</published>
+        <updated>2023-06-30T00:00:00+00:00</updated>
+        <author>
+          <name>Unknown</name>
+        </author>
+        <link rel="alternate" href="https://blog.x4m3.rocks/dynamic-motd-alpine/" type="text/html"/>
+        <id>https://blog.x4m3.rocks/dynamic-motd-alpine/</id>
+        
+        <content type="html">&lt;p&gt;When we sign in to our server, the message of the day (MOTD) is pretty lame. Let&#x27;s get something better!&lt;&#x2F;p&gt;
+&lt;p&gt;This is the default MOTD of alpine:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;Welcome to Alpine!
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;The Alpine Wiki contains a large amount of how-to guides and general
+&lt;&#x2F;span&gt;&lt;span&gt;information about administrating Alpine systems.
+&lt;&#x2F;span&gt;&lt;span&gt;See &amp;lt;http:&#x2F;&#x2F;wiki.alpinelinux.org&amp;gt;.
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;You can setup the system with the command: setup-alpine
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;You may change this message by editing &#x2F;etc&#x2F;motd.
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;And here&#x27;s my new MOTD. I even show the WireGuard ip address:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  Name: intra.philt3r
+&lt;&#x2F;span&gt;&lt;span&gt;  Kernel: 6.1.35-0-lts
+&lt;&#x2F;span&gt;&lt;span&gt;  Distro: Alpine Linux v3.18
+&lt;&#x2F;span&gt;&lt;span&gt;  Version 3.18.2
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  Uptime: 0 days, 0 hours, 22 minutes
+&lt;&#x2F;span&gt;&lt;span&gt;  CPU Load: 0.00, 0.00, 0.00
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  Memory: 468M
+&lt;&#x2F;span&gt;&lt;span&gt;  Free Memory: 217M
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  Disk: 6.6G
+&lt;&#x2F;span&gt;&lt;span&gt;  Free Disk: 6.6G
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  eth0 Address: 192.168.1.71
+&lt;&#x2F;span&gt;&lt;span&gt;  wg0 Address: 10.131.111.1
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Start and enable cron at startup (it should be installed by default):&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;rc-service crond start
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;rc-update add crond
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Let&#x27;s run a script every 15 minutes to update the &lt;code&gt;&#x2F;etc&#x2F;motd&lt;&#x2F;code&gt; file:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;&#x2F;etc&#x2F;periodic&#x2F;15min&#x2F;motd
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Here&#x27;s the content of my MOTD:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;font-style:italic;color:#928374;&quot;&gt;#!&#x2F;bin&#x2F;sh
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#928374;&quot;&gt;#. &#x2F;etc&#x2F;os-release
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;PRETTY_NAME&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;`awk -F&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;#39;$1==&amp;quot;PRETTY_NAME&amp;quot; { print $2 ;}&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt; &#x2F;etc&#x2F;os-release &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;tr -d &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;#39;&amp;quot;&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;`
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;VERSION_ID&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;`awk -F&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;#39;$1==&amp;quot;VERSION_ID&amp;quot; { print $2 ;}&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt; &#x2F;etc&#x2F;os-release`
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;UPTIME_DAYS&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;$(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;expr `cat &#x2F;proc&#x2F;uptime &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;cut -d &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;#39;.&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt; -f1` % 31556926 &#x2F; 86400&lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;)
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;UPTIME_HOURS&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;$(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;expr `cat &#x2F;proc&#x2F;uptime &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;cut -d &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;#39;.&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt; -f1` % 31556926 % 86400 &#x2F; 3600&lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;)
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;UPTIME_MINUTES&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;$(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;expr `cat &#x2F;proc&#x2F;uptime &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;cut -d &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;#39;.&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt; -f1` % 31556926 % 86400 % 3600 &#x2F; 60&lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;)
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;cat &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;&amp;gt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt; &#x2F;etc&#x2F;motd &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;&amp;lt;&amp;lt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#9d0006;&quot;&gt;EOF
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;  Name: `hostname`
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;  Kernel: `uname -r`
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;  Distro: $PRETTY_NAME
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;  Version $VERSION_ID
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;  Uptime: $UPTIME_DAYS days, $UPTIME_HOURS hours, $UPTIME_MINUTES minutes
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;  CPU Load: `cat &#x2F;proc&#x2F;loadavg &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;awk &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;#39;{print $1 &amp;quot;, &amp;quot; $2 &amp;quot;, &amp;quot; $3}&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;`
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;  Memory: `free -m &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;head -n 2 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;tail -n 1 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;awk {&lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;#39;print  $2&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;}`M
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;  Free Memory: `free -m &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;head -n 2 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;tail -n 1 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;awk {&lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;#39;print $4&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;}`M
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;  Disk: `df -h &#x2F; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;awk  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;#39;{ a = $2 } END { print a }&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;`
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;  Free Disk: `df -h &#x2F; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;awk &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;#39;{ a =  $2 } END { print a }&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;`
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;  eth0 Address: `ifconfig eth0 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;grep &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;quot;inet addr&amp;quot; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;|  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;awk -F: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;#39;{print $2}&amp;#39; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;awk &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;#39;{print $1}&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;`
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;  wg0 Address: `ifconfig wg0 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;grep &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;quot;inet addr&amp;quot; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;|  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;awk -F: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;#39;{print $2}&amp;#39; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;awk &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;#39;{print $1}&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;`
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#9d0006;&quot;&gt;EOF
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Make the script executable, and check if it&#x27;s good:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;chmod a+x &#x2F;etc&#x2F;periodic&#x2F;15min&#x2F;motd
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;run-parts --test &#x2F;etc&#x2F;periodic&#x2F;15min
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;If you&#x27;re lazy and don&#x27;t want to wait 15 minutes, run the script directly:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;&#x2F;etc&#x2F;periodic&#x2F;15min&#x2F;motd
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Log out and log back in, you should see the new MOTD!&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;resources&quot;&gt;Resources&lt;&#x2F;h1&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;kingtam.win&#x2F;archives&#x2F;apline-custom.html&quot;&gt;https:&#x2F;&#x2F;kingtam.win&#x2F;archives&#x2F;apline-custom.html&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;I just copy&#x2F;pasted and changed the MOTD.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Setup Caddy with a CA and ACME server on Alpine Linux</title>
+        <published>2023-06-28T00:00:00+00:00</published>
+        <updated>2023-06-28T00:00:00+00:00</updated>
+        <author>
+          <name>Unknown</name>
+        </author>
+        <link rel="alternate" href="https://blog.x4m3.rocks/caddy-ca-acme-alpine/" type="text/html"/>
+        <id>https://blog.x4m3.rocks/caddy-ca-acme-alpine/</id>
+        
+        <content type="html">&lt;p&gt;Now that we have a WireGuard VPN with an awesome internal DNS server, let&#x27;s get a web server with HTTPS!&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;caddy&quot;&gt;Caddy&lt;&#x2F;h1&gt;
+&lt;h2 id=&quot;install&quot;&gt;Install&lt;&#x2F;h2&gt;
+&lt;p&gt;You will need to enable the &lt;code&gt;community&lt;&#x2F;code&gt; repo first.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;doas apk add caddy
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h2 id=&quot;configuration&quot;&gt;Configuration&lt;&#x2F;h2&gt;
+&lt;p&gt;Create a folder to serve stuff from, I placed it in&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;&#x2F;srv&#x2F;www
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Create the config in&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;&#x2F;etc&#x2F;caddy&#x2F;Caddyfile
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Here&#x27;s the config, it&#x27;s very simple to get started:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;intra.philt3r:80
+&lt;&#x2F;span&gt;&lt;span&gt;root * &#x2F;srv&#x2F;www
+&lt;&#x2F;span&gt;&lt;span&gt;file_server browse
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;This config will only launch an HTTP server, the HTTPS will come later.&lt;&#x2F;p&gt;
+&lt;p&gt;It should work only from the WireGuard peers, since they can resolve the DNS name &lt;code&gt;intra.philt3r&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;If there is no &lt;code&gt;index.html&lt;&#x2F;code&gt; in the folder, it will serve static files directly.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;script-to-launch&quot;&gt;Script to launch&lt;&#x2F;h2&gt;
+&lt;p&gt;Caddy already has a service!&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Start: &lt;code&gt;rc-service caddy start&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;Stop: &lt;code&gt;rc-service caddy stop&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;Reload configuration without downtime: &lt;code&gt;rc-service caddy reload&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h1 id=&quot;generate-keys-and-certificates&quot;&gt;Generate keys and certificates&lt;&#x2F;h1&gt;
+&lt;p&gt;We will generate the Root CA, the Intermediate CA.&lt;&#x2F;p&gt;
+&lt;p&gt;Generate these with &lt;code&gt;openssl&lt;&#x2F;code&gt; installed on a computer, preferabbly offline.&lt;&#x2F;p&gt;
+&lt;p&gt;Make sure the keys are stored in a safe place, I will store mine inside of a KeePassXC keystore.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;openssl-configuration&quot;&gt;OpenSSL Configuration&lt;&#x2F;h2&gt;
+&lt;p&gt;inside a folder, create a file&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;config.conf
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;In &lt;code&gt;[CA_root]&lt;&#x2F;code&gt;, make sure to put your folder &lt;code&gt;dir&lt;&#x2F;code&gt;&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;ini&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-ini &quot;&gt;&lt;code class=&quot;language-ini&quot; data-lang=&quot;ini&quot;&gt;&lt;span style=&quot;font-style:italic;color:#928374;&quot;&gt;# OpenSSL root CA configuration file.
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#9d0006;&quot;&gt;[ ca ]
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#928374;&quot;&gt;# `man ca`
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;default_ca &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; CA_root
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#9d0006;&quot;&gt;[ CA_root ]
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#928374;&quot;&gt;# Directory and file locations.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;dir               &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;= &#x2F;&lt;&#x2F;span&gt;&lt;span&gt;home&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;&#x2F;&lt;&#x2F;span&gt;&lt;span&gt;phil&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;&#x2F;&lt;&#x2F;span&gt;&lt;span&gt;ca
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;certs             &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#9d0006;&quot;&gt;$dir&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;&#x2F;&lt;&#x2F;span&gt;&lt;span&gt;certs
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;crl_dir           &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#9d0006;&quot;&gt;$dir&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;&#x2F;&lt;&#x2F;span&gt;&lt;span&gt;crl
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;new_certs_dir     &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#9d0006;&quot;&gt;$dir&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;&#x2F;&lt;&#x2F;span&gt;&lt;span&gt;newcerts
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;database          &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#9d0006;&quot;&gt;$dir&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;&#x2F;&lt;&#x2F;span&gt;&lt;span&gt;index&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span&gt;txt
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;serial            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#9d0006;&quot;&gt;$dir&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;&#x2F;&lt;&#x2F;span&gt;&lt;span&gt;serial
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b57614;&quot;&gt;RANDFILE          &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#9d0006;&quot;&gt;$dir&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;&#x2F;&lt;&#x2F;span&gt;&lt;span&gt;private&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;&#x2F;.&lt;&#x2F;span&gt;&lt;span&gt;rand
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#928374;&quot;&gt;# The root key and root certificate.
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#928374;&quot;&gt;# Match names with Smallstep naming convention
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;private_key       &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#9d0006;&quot;&gt;$dir&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;&#x2F;&lt;&#x2F;span&gt;&lt;span&gt;root_ca_key
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;certificate       &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#9d0006;&quot;&gt;$dir&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;&#x2F;&lt;&#x2F;span&gt;&lt;span&gt;root_ca&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span&gt;crt
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#928374;&quot;&gt;# For certificate revocation lists.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;crlnumber         &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#9d0006;&quot;&gt;$dir&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;&#x2F;&lt;&#x2F;span&gt;&lt;span&gt;crlnumber
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;crl               &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#9d0006;&quot;&gt;$dir&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;&#x2F;&lt;&#x2F;span&gt;&lt;span&gt;crl&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;&#x2F;&lt;&#x2F;span&gt;&lt;span&gt;ca&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span&gt;crl&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span&gt;pem
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;crl_extensions    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; crl_ext
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;default_crl_days  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8f3f71;&quot;&gt;30
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#928374;&quot;&gt;# SHA-1 is deprecated, so use SHA-2 instead.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;default_md        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; sha256
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;name_opt          &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; ca_default
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;cert_opt          &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; ca_default
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;default_days      &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8f3f71;&quot;&gt;25202
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;preserve          &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8f3f71;&quot;&gt;no
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;policy            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; policy_strict
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#9d0006;&quot;&gt;[ policy_strict ]
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#928374;&quot;&gt;# The root CA should only sign intermediate certificates that match.
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#928374;&quot;&gt;# See the POLICY FORMAT section of `man ca`.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;countryName             &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; match
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;stateOrProvinceName 	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; supplied
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;localityName	    	&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; supplied
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;organizationName        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; match
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;commonName              &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; supplied
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#9d0006;&quot;&gt;[ req ]
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#928374;&quot;&gt;# Options for the `req` tool (`man req`).
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;default_bits        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8f3f71;&quot;&gt;4096
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;distinguished_name  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; req_distinguished_name
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;string_mask         &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; utf8only
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#928374;&quot;&gt;# SHA-1 is deprecated, so use SHA-2 instead.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;default_md          &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; sha256
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#928374;&quot;&gt;# Extension to add when the -x509 option is used.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;x509_extensions     &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; v3_ca
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#9d0006;&quot;&gt;[ req_distinguished_name ]
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#928374;&quot;&gt;# See &amp;lt;https:&#x2F;&#x2F;en.wikipedia.org&#x2F;wiki&#x2F;Certificate_signing_request&amp;gt;.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;countryName          &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; Country (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8f3f71;&quot;&gt;2&lt;&#x2F;span&gt;&lt;span&gt; letter code)
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;stateOrProvinceName  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; State or Region
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;localityName         &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; City
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;commonName           &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; Common Name
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8f3f71;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span&gt;organizationName   &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; Organization Name
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#9d0006;&quot;&gt;[ v3_ca ]
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#928374;&quot;&gt;# Extensions for a typical CA (`man x509v3_config`).
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;subjectKeyIdentifier &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; hash
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;authorityKeyIdentifier &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; keyid&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;:&lt;&#x2F;span&gt;&lt;span&gt;always&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;,&lt;&#x2F;span&gt;&lt;span&gt;issuer
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;basicConstraints &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; critical&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b57614;&quot;&gt;CA&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8f3f71;&quot;&gt;true
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;keyUsage &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; critical&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;,&lt;&#x2F;span&gt;&lt;span&gt; digitalSignature&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;,&lt;&#x2F;span&gt;&lt;span&gt; cRLSign&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;,&lt;&#x2F;span&gt;&lt;span&gt; keyCertSign
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#9d0006;&quot;&gt;[ v3_intermediate_ca ]
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#928374;&quot;&gt;# Extensions for a typical intermediate CA (`man x509v3_config`).
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;subjectKeyIdentifier &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; hash
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;authorityKeyIdentifier &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; keyid&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;:&lt;&#x2F;span&gt;&lt;span&gt;always&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;,&lt;&#x2F;span&gt;&lt;span&gt;issuer
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;basicConstraints &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; critical&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b57614;&quot;&gt;CA&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8f3f71;&quot;&gt;true&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;,&lt;&#x2F;span&gt;&lt;span&gt; pathlen&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8f3f71;&quot;&gt;0
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;keyUsage &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; critical&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;,&lt;&#x2F;span&gt;&lt;span&gt; digitalSignature&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;,&lt;&#x2F;span&gt;&lt;span&gt; cRLSign&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;,&lt;&#x2F;span&gt;&lt;span&gt; keyCertSign
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;After, run&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;mkdir newcerts
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;touch index.txt
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b57614;&quot;&gt;echo&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt; 1420 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;&amp;gt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt; serial
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;We are now ready to generate keys and certificates.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;root-key-and-certificate&quot;&gt;Root key and certificate&lt;&#x2F;h2&gt;
+&lt;p&gt;Generate key:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;openssl genrsa -aes256 -out root_ca_key 4096
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;It will ask for a passphrase, I generated mine with my KeePassXC.&lt;&#x2F;p&gt;
+&lt;p&gt;Generate root certificate:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;openssl req -config config.conf -key root_ca_key -days 3650 -new -x509 -sha256 -extensions v3_ca -out root_ca.crt
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;My root CA will last for 3650 days (10 years).&lt;&#x2F;p&gt;
+&lt;p&gt;Here&#x27;s the info I provided:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;Country (2 letter code) []:FR
+&lt;&#x2F;span&gt;&lt;span&gt;State or Region []:Bretagne
+&lt;&#x2F;span&gt;&lt;span&gt;City []:Rennes
+&lt;&#x2F;span&gt;&lt;span&gt;Common Name []:philt3r CA
+&lt;&#x2F;span&gt;&lt;span&gt;Organization Name []:philt3r
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;I saved the &lt;code&gt;root_ca_key&lt;&#x2F;code&gt; and &lt;code&gt;root_ca.crt&lt;&#x2F;code&gt; inside my KeePassXC.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;intermediate-key-and-certificate&quot;&gt;Intermediate key and certificate&lt;&#x2F;h2&gt;
+&lt;p&gt;Generate key:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;openssl genrsa -aes256 -out intermediate_ca_key 4096
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;It will ask for a passphrase, I generated mine with my KeePassXC.&lt;&#x2F;p&gt;
+&lt;p&gt;Generate certificate request:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;openssl req -config config.conf -new -sha256 -key intermediate_ca_key -out intermediate_ca.csr.pem
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Here&#x27;s the info I provided:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;Country (2 letter code) []:FR
+&lt;&#x2F;span&gt;&lt;span&gt;State or Region []:Bretagne
+&lt;&#x2F;span&gt;&lt;span&gt;City []:Rennes
+&lt;&#x2F;span&gt;&lt;span&gt;Common Name []:philt3r Intermediate CA 
+&lt;&#x2F;span&gt;&lt;span&gt;Organization Name []:philt3r
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Sign certificate request with Root key:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;openssl ca -config config.conf -keyfile root_ca_key -cert root_ca.crt -extensions v3_intermediate_ca -days 1825 -notext -md sha256 -in intermediate_ca.csr.pem -out intermediate_ca.crt
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;My Intermediate certificate will last for 1825 days (5 years).&lt;&#x2F;p&gt;
+&lt;p&gt;Save these files, I saved them in my KeePassXC:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;intermediate_ca_key&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;intermediate_ca.csr.pem&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;intermediate_ca.crt&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Once everything is saved and backed up, delete everything from your computer securely.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;ca-and-acme-server&quot;&gt;CA and ACME server&lt;&#x2F;h1&gt;
+&lt;p&gt;I discovered &lt;a href=&quot;https:&#x2F;&#x2F;smallstep.com&#x2F;&quot;&gt;Smallstep&lt;&#x2F;a&gt;, which allows to become your own ACME server.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;install-1&quot;&gt;Install&lt;&#x2F;h2&gt;
+&lt;p&gt;They provide packages for Alpine!&lt;&#x2F;p&gt;
+&lt;p&gt;Install the packages with&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;apk add step-cli step-certificates
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h2 id=&quot;configuration-1&quot;&gt;Configuration&lt;&#x2F;h2&gt;
+&lt;p&gt;Start by creating the folder where &lt;code&gt;step&lt;&#x2F;code&gt; will save all the configs:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;mkdir &#x2F;etc&#x2F;step-ca -p
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Let&#x27;s configure &lt;code&gt;step-ca&lt;&#x2F;code&gt;!&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;STEPPATH&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&#x2F;etc&#x2F;step-ca &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;step ca init --name&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;quot;philt3r&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt; --acme --address&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;quot;10.131.111.1:444&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt; --provisioner&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;quot;philt3r&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt; --deployment-type standalone
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;I ask it to run on the address &lt;code&gt;10.131.111.1&lt;&#x2F;code&gt; (the WireGuard ip) and on the port &lt;code&gt;444&lt;&#x2F;code&gt;. The port &lt;code&gt;443&lt;&#x2F;code&gt; will be used for a https server, so I picked 443 + 1.&lt;&#x2F;p&gt;
+&lt;p&gt;Since I want an ACME server, I asked to get one.&lt;&#x2F;p&gt;
+&lt;p&gt;Step will ask what IP address the clients will use to reach your ca, reply with &lt;code&gt;10.131.111.1&lt;&#x2F;code&gt;, because only WireGuard peers and the server should be allowed.&lt;&#x2F;p&gt;
+&lt;p&gt;This will prompt a password, put one.&lt;&#x2F;p&gt;
+&lt;p&gt;Step will generate a root and intermediate key, as well as an intermediate certificate. We don&#x27;t want that, since we already generated our own.&lt;&#x2F;p&gt;
+&lt;p&gt;Copy these files in &lt;code&gt;&#x2F;etc&#x2F;step-ca&#x2F;certs&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;root_ca.crt&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;intermediate_ca.crt&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Copy &lt;code&gt;intermediate_ca_key&lt;&#x2F;code&gt; in &lt;code&gt;&#x2F;etc&#x2F;step-ca&#x2F;secrets&lt;&#x2F;code&gt; folder. I use the key directly, but in a safe environment use a Yubikey, but I don&#x27;t have one.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;start-the-ca-acme-server&quot;&gt;Start the CA&#x2F;ACME server&lt;&#x2F;h2&gt;
+&lt;p&gt;Run&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;step-ca &#x2F;etc&#x2F;step-ca&#x2F;config&#x2F;ca.json
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;to start the server. It will ask your password to decrypt the &lt;code&gt;intermediate_ca_key&lt;&#x2F;code&gt;. Provide the password.&lt;&#x2F;p&gt;
+&lt;p&gt;The server should start, stop it.&lt;&#x2F;p&gt;
+&lt;p&gt;We will now create a file containing the password of the &lt;code&gt;intermediate_ca_key&lt;&#x2F;code&gt;, since we want to have the ACME server starting when Alpine will boot.&lt;&#x2F;p&gt;
+&lt;p&gt;Why put the password inside a file? Well, simply because we can&#x27;t type the password at boot. Again, in an ideal environment, use a Yubikey.&lt;&#x2F;p&gt;
+&lt;p&gt;Create a file at&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;&#x2F;etc&#x2F;step-ca&#x2F;password.txt
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;and place the password inside that file.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;code&gt;step&lt;&#x2F;code&gt; should run as the user &lt;code&gt;step-ca&lt;&#x2F;code&gt;, so update the permissions on the config folder:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;chown step-ca:step-ca -Rv &#x2F;etc&#x2F;step-ca&#x2F;
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;To verify that everything worked, run:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;step-ca &#x2F;etc&#x2F;step-ca&#x2F;config&#x2F;ca.json --password-file&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;&#x2F;etc&#x2F;step-ca&#x2F;password.txt
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Stop the server again.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;script-to-launch-1&quot;&gt;Script to launch&lt;&#x2F;h2&gt;
+&lt;p&gt;Step already has a service!&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Start: &lt;code&gt;rc-service step-ca start&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;Stop: &lt;code&gt;rc-service step-ca stop&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h1 id=&quot;use-acme-with-caddy&quot;&gt;Use ACME with Caddy&lt;&#x2F;h1&gt;
+&lt;p&gt;Now let&#x27;s tell Caddy to get TLS certificates with our ACME server.&lt;&#x2F;p&gt;
+&lt;p&gt;Edit the &lt;code&gt;&#x2F;etc&#x2F;caddy&#x2F;Caddyfile&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;# global
+&lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;        # step-ca ACME server
+&lt;&#x2F;span&gt;&lt;span&gt;        acme_ca https:&#x2F;&#x2F;10.131.111.1:444&#x2F;acme&#x2F;acme&#x2F;directory
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;intra.philt3r intra.philt3r:80 {
+&lt;&#x2F;span&gt;&lt;span&gt;        root * &#x2F;srv&#x2F;www
+&lt;&#x2F;span&gt;&lt;span&gt;        file_server browse
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Make sure &lt;code&gt;step-ca&lt;&#x2F;code&gt; is started, and restart Caddy to make sure everything is good:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;rc-service caddy restart
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Now we need to tell our system to trust the certificates.&lt;&#x2F;p&gt;
+&lt;p&gt;Download the file containing the certificates. It is available at this URL:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;https:&#x2F;&#x2F;10.131.111.1:444&#x2F;roots.pem
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;On every device you want to trust your certificates, you will need to download the file on the device, then you will need to tell your operating system to trust it.&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;OSX: &lt;a href=&quot;https:&#x2F;&#x2F;tosbourn.com&#x2F;getting-os-x-to-trust-self-signed-ssl-certificates&#x2F;&quot;&gt;Trust the certificate&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;iOS: Download the certificate from the device and &lt;a href=&quot;https:&#x2F;&#x2F;support.apple.com&#x2F;en-us&#x2F;HT204477&quot;&gt;trust it&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;Firefox: Install the certificate on your system and &lt;a href=&quot;https:&#x2F;&#x2F;support.mozilla.org&#x2F;en-US&#x2F;kb&#x2F;setting-certificate-authorities-firefox&quot;&gt;tell firefox to trust it&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;Linux distros: &lt;a href=&quot;https:&#x2F;&#x2F;ubuntu.com&#x2F;server&#x2F;docs&#x2F;security-trust-store&quot;&gt;Ubuntu&lt;&#x2F;a&gt;, &lt;a href=&quot;https:&#x2F;&#x2F;docs.fedoraproject.org&#x2F;en-US&#x2F;quick-docs&#x2F;using-shared-system-certificates&quot;&gt;Fedora&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h1 id=&quot;start-on-boot&quot;&gt;Start on boot&lt;&#x2F;h1&gt;
+&lt;p&gt;Start &lt;code&gt;caddy&lt;&#x2F;code&gt; and &lt;code&gt;step-ca&lt;&#x2F;code&gt; on startup with:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;rc-update add step-ca
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;rc-update add caddy
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Reboot to make sure everything works.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;resources&quot;&gt;Resources&lt;&#x2F;h1&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;wiki.alpinelinux.org&#x2F;wiki&#x2F;Repositories&quot;&gt;https:&#x2F;&#x2F;wiki.alpinelinux.org&#x2F;wiki&#x2F;Repositories&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;Awesome guide that helped me a lot: &lt;a href=&quot;https:&#x2F;&#x2F;www.apalrd.net&#x2F;posts&#x2F;2023&#x2F;network_acme&#x2F;&quot;&gt;https:&#x2F;&#x2F;www.apalrd.net&#x2F;posts&#x2F;2023&#x2F;network_acme&#x2F;&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Setup CoreDNS on Alpine Linux</title>
+        <published>2023-06-25T00:00:00+00:00</published>
+        <updated>2023-06-25T00:00:00+00:00</updated>
+        <author>
+          <name>Unknown</name>
+        </author>
+        <link rel="alternate" href="https://blog.x4m3.rocks/coredns-alpine/" type="text/html"/>
+        <id>https://blog.x4m3.rocks/coredns-alpine/</id>
+        
+        <content type="html">&lt;p&gt;Now that we have a WireGuard VPN, let&#x27;s add a DNS server, to type letters instead of numbers!&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;install-coredns&quot;&gt;Install CoreDNS&lt;&#x2F;h1&gt;
+&lt;p&gt;You will need to enable the &lt;code&gt;community&lt;&#x2F;code&gt; repo first.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;doas apk add coredns
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h1 id=&quot;configuration&quot;&gt;Configuration&lt;&#x2F;h1&gt;
+&lt;p&gt;Create the config in&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;&#x2F;etc&#x2F;coredns&#x2F;Corefile
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;# snippets
+&lt;&#x2F;span&gt;&lt;span&gt;(common) {
+&lt;&#x2F;span&gt;&lt;span&gt;    cache 60
+&lt;&#x2F;span&gt;&lt;span&gt;    acl {
+&lt;&#x2F;span&gt;&lt;span&gt;        allow net 127.0.0.1 10.131.110.0&#x2F;24 10.131.111.0&#x2F;24
+&lt;&#x2F;span&gt;&lt;span&gt;        block
+&lt;&#x2F;span&gt;&lt;span&gt;    }
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;# intranet
+&lt;&#x2F;span&gt;&lt;span&gt;philt3r {
+&lt;&#x2F;span&gt;&lt;span&gt;    import common
+&lt;&#x2F;span&gt;&lt;span&gt;    log . {combined} {
+&lt;&#x2F;span&gt;&lt;span&gt;        class denial error success
+&lt;&#x2F;span&gt;&lt;span&gt;    }
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    hosts {
+&lt;&#x2F;span&gt;&lt;span&gt;        10.131.111.1 intra.philt3r
+&lt;&#x2F;span&gt;&lt;span&gt;        falltrough
+&lt;&#x2F;span&gt;&lt;span&gt;    }
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;# extranet
+&lt;&#x2F;span&gt;&lt;span&gt;. {
+&lt;&#x2F;span&gt;&lt;span&gt;    import common
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;    # Free DNS
+&lt;&#x2F;span&gt;&lt;span&gt;    forward . 212.27.40.240 212.27.40.241
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;My DNS service of choice comes from &lt;a href=&quot;https:&#x2F;&#x2F;free.fr&quot;&gt;free.fr&lt;&#x2F;a&gt;. Feel free to put your own favorite DNS service!&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;script-to-launch-on-server-startup&quot;&gt;Script to launch on server startup&lt;&#x2F;h1&gt;
+&lt;p&gt;CoreDNS already has a service!&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Add at startup: &lt;code&gt;rc-update add coredns&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;Remove from startup: &lt;code&gt;rc-update del coredns&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;Show services at startup: &lt;code&gt;rc-status&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;The logs of CoreDNS should be available at&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;&#x2F;var&#x2F;log&#x2F;coredns&#x2F;coredns.log
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h1 id=&quot;use-coredns-on-the-system&quot;&gt;Use CoreDNS on the system&lt;&#x2F;h1&gt;
+&lt;p&gt;Now that we have our DNS server, let&#x27;s use it on our server!&lt;&#x2F;p&gt;
+&lt;p&gt;If you use DHCP to get the ip address of your server, the DNS will always be used from the DHCP.&lt;&#x2F;p&gt;
+&lt;p&gt;We want to use our own DHCP server.&lt;&#x2F;p&gt;
+&lt;p&gt;Create the file (and the folder associated with it)&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;&#x2F;etc&#x2F;udhcpc&#x2F;udhcpc.conf
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;and put&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;RESOLV_CONF=&amp;quot;NO&amp;quot;
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Then, edit the&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;&#x2F;etc&#x2F;resolv.conf
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;and put&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;nameserver 127.0.0.1
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Restart the server.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Setup WireGuard server on Alpine Linux</title>
+        <published>2023-06-24T00:00:00+00:00</published>
+        <updated>2023-06-24T00:00:00+00:00</updated>
+        <author>
+          <name>Unknown</name>
+        </author>
+        <link rel="alternate" href="https://blog.x4m3.rocks/wireguard-alpine/" type="text/html"/>
+        <id>https://blog.x4m3.rocks/wireguard-alpine/</id>
+        
+        <content type="html">&lt;p&gt;Let&#x27;s do this baremetal, no Docker!&lt;&#x2F;p&gt;
+&lt;p&gt;I will do this inside a &lt;a href=&quot;https:&#x2F;&#x2F;www.proxmox.com&#x2F;en&#x2F;&quot;&gt;Proxmox&lt;&#x2F;a&gt; virtual machine.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;get-started&quot;&gt;Get started&lt;&#x2F;h1&gt;
+&lt;p&gt;Start by installing &lt;a href=&quot;https:&#x2F;&#x2F;www.alpinelinux.org&#x2F;&quot;&gt;Alpine Linux&lt;&#x2F;a&gt;: Run the installer, next, next, next, and boot the os once it&#x27;s done.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;setup-ssh&quot;&gt;Setup ssh&lt;&#x2F;h1&gt;
+&lt;p&gt;Copy ssh key (run this on your local machine):&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;ssh-copy-id -i ~&#x2F;.ssh&#x2F;id_rsa.pub user@ip
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Login via ssh, and install your favorite editor:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;doas apk add vim
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Edit ssh config to force ssh key use:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;doas vim &#x2F;etc&#x2F;ssh&#x2F;sshd_config
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Find and update these statements:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;PermitRootLogin no
+&lt;&#x2F;span&gt;&lt;span&gt;PubkeyAuthentication yes
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Restart ssh service, logout, and log back in&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;doas rc-service sshd restart
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h1 id=&quot;setup-alpine-package-manager&quot;&gt;Setup alpine package manager&lt;&#x2F;h1&gt;
+&lt;p&gt;I use &lt;code&gt;mirrors.ircam.fr&lt;&#x2F;code&gt; as my mirror&lt;&#x2F;p&gt;
+&lt;p&gt;Open &lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;&#x2F;etc&#x2F;apk&#x2F;repositories
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;add the community repo, and run updates:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;doas apk -U upgrade
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h1 id=&quot;wireguard-basics&quot;&gt;WireGuard basics&lt;&#x2F;h1&gt;
+&lt;p&gt;Install WireGuard:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;doas apk add wireguard-tools
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h2 id=&quot;kernel-module&quot;&gt;Kernel module&lt;&#x2F;h2&gt;
+&lt;p&gt;Load the module&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;doas modprobe wireguard
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;To launch the module on startup, edit&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;&#x2F;etc&#x2F;modules
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;and simply add&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;wireguard
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;at the bottom, and save the file.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;ip-forwarding&quot;&gt;IP forwarding&lt;&#x2F;h2&gt;
+&lt;p&gt;Edit&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;&#x2F;etc&#x2F;sysctl.conf
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;and add&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;net.ipv4.ip_forward = 1
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;at the bottom of the file, and save&lt;&#x2F;p&gt;
+&lt;p&gt;Launch sysctl on startup with&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;doas rc-update add sysctl
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;and reboot.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;ip-addresses&quot;&gt;IP Addresses&lt;&#x2F;h1&gt;
+&lt;p&gt;Pick a range if ip addresses to use: &lt;a href=&quot;https:&#x2F;&#x2F;datatracker.ietf.org&#x2F;doc&#x2F;html&#x2F;rfc1918&quot;&gt;RFC 1918&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;I&#x27;ll pick &lt;code&gt;10.131.111.x&lt;&#x2F;code&gt; for the WireGuard peers.&lt;&#x2F;p&gt;
+&lt;p&gt;Calculate your CIDR: &lt;a href=&quot;https:&#x2F;&#x2F;www.ipaddressguide.com&#x2F;cidr&quot;&gt;https:&#x2F;&#x2F;www.ipaddressguide.com&#x2F;cidr&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Here&#x27;s my network layout:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;CIDR: &lt;code&gt;10.131.110.0&#x2F;23&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;Start: &lt;code&gt;10.131.110.0&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;End: &lt;code&gt;10.131.111.255&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Network services:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Start: &lt;code&gt;10.131.110.0&#x2F;24&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;End: &lt;code&gt;10.131.110.255&#x2F;24&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;WireGuard:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Start: &lt;code&gt;10.131.111.0&#x2F;24&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;End: &lt;code&gt;10.131.111.255&#x2F;24&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h1 id=&quot;generate-keys-for-wireguard&quot;&gt;Generate keys for WireGuard&lt;&#x2F;h1&gt;
+&lt;p&gt;Do everything as root (doas is the equivalent of sudo):&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;doas su
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Move to the wireguard configuration, I&#x27;ll store everything there for easy access:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#b57614;&quot;&gt;cd&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt; &#x2F;etc&#x2F;wireguard&#x2F;
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Generate the private and public key, store them in files (we&#x27;ll use them later):&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;wg genkey &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;tee philt3r-privatekey &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;wg pubkey &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;&amp;gt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt; philt3r-publickey
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h1 id=&quot;configure-server-interface&quot;&gt;Configure server interface&lt;&#x2F;h1&gt;
+&lt;p&gt;All the server configuration will happen in&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;&#x2F;etc&#x2F;wireguard&#x2F;wg0.conf
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Protip for vim users: To add content of a file in current buffer directly: &lt;a href=&quot;https:&#x2F;&#x2F;stackoverflow.com&#x2F;a&#x2F;19087947&#x2F;4809297&quot;&gt;StackOverflow answer&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;ini&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-ini &quot;&gt;&lt;code class=&quot;language-ini&quot; data-lang=&quot;ini&quot;&gt;&lt;span style=&quot;color:#9d0006;&quot;&gt;[Interface]
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#928374;&quot;&gt;# Name = wg0
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;Address &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;10.131.111.1&#x2F;24
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;ListenPort &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8f3f71;&quot;&gt;51820
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;PrivateKey &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;= &amp;lt;&lt;&#x2F;span&gt;&lt;span&gt;server&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span&gt;private&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span&gt;key&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;PostUp &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; iptables &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span&gt;t nat &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b57614;&quot;&gt;A POSTROUTING &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span&gt;s &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;10.131.111.0&#x2F;24 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span&gt;o &lt;&#x2F;span&gt;&lt;span style=&quot;color:#9d0006;&quot;&gt;%i &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span&gt;j &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b57614;&quot;&gt;MASQUERADE&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;PostUp &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; iptables &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span&gt;t nat &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b57614;&quot;&gt;A POSTROUTING &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span&gt;s &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;10.131.110.0&#x2F;24 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span&gt;o &lt;&#x2F;span&gt;&lt;span style=&quot;color:#9d0006;&quot;&gt;%i &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span&gt;j &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b57614;&quot;&gt;MASQUERADE&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;PostUp &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; iptables &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b57614;&quot;&gt;A INPUT &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span&gt;p udp &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span&gt;m udp &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;--&lt;&#x2F;span&gt;&lt;span&gt;dport &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8f3f71;&quot;&gt;51820 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span&gt;j &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b57614;&quot;&gt;ACCEPT&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;PostUp &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; iptables &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b57614;&quot;&gt;A FORWARD &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span&gt;i &lt;&#x2F;span&gt;&lt;span style=&quot;color:#9d0006;&quot;&gt;%i &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span&gt;j &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b57614;&quot;&gt;ACCEPT&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;PostUp &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; iptables &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b57614;&quot;&gt;A FORWARD &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span&gt;o &lt;&#x2F;span&gt;&lt;span style=&quot;color:#9d0006;&quot;&gt;%i &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span&gt;j &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b57614;&quot;&gt;ACCEPT&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;PostDown &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; iptables &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span&gt;t nat &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b57614;&quot;&gt;D POSTROUTING &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span&gt;s &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;10.131.111.0&#x2F;24 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span&gt;o &lt;&#x2F;span&gt;&lt;span style=&quot;color:#9d0006;&quot;&gt;%i &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span&gt;j &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b57614;&quot;&gt;MASQUERADE&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;PostDown &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; iptables &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span&gt;t nat &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b57614;&quot;&gt;D POSTROUTING &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span&gt;s &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;10.131.110.0&#x2F;24 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span&gt;o &lt;&#x2F;span&gt;&lt;span style=&quot;color:#9d0006;&quot;&gt;%i &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span&gt;j &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b57614;&quot;&gt;MASQUERADE&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;PostDown &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; iptables &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b57614;&quot;&gt;D INPUT &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span&gt;p udp &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span&gt;m udp &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;--&lt;&#x2F;span&gt;&lt;span&gt;dport &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8f3f71;&quot;&gt;51820 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span&gt;j &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b57614;&quot;&gt;ACCEPT&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;PostDown &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; iptables &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b57614;&quot;&gt;D FORWARD &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span&gt;i &lt;&#x2F;span&gt;&lt;span style=&quot;color:#9d0006;&quot;&gt;%i &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span&gt;j &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b57614;&quot;&gt;ACCEPT&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;PostDown &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; iptables &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b57614;&quot;&gt;D FORWARD &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span&gt;o &lt;&#x2F;span&gt;&lt;span style=&quot;color:#9d0006;&quot;&gt;%i &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span&gt;j &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b57614;&quot;&gt;ACCEPT&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Once it&#x27;s good, make sure only root can read and write to the files:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;chmod 600 &#x2F;etc&#x2F;wireguard&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;*
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h1 id=&quot;add-new-peer&quot;&gt;Add new peer&lt;&#x2F;h1&gt;
+&lt;p&gt;You will need to repeat this for each new peer&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#b57614;&quot;&gt;cd&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt; &#x2F;etc&#x2F;wireguard&#x2F;
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h2 id=&quot;generate-keys&quot;&gt;Generate keys&lt;&#x2F;h2&gt;
+&lt;p&gt;Starting now, &lt;code&gt;name&lt;&#x2F;code&gt; is a placeholder for the name of the peer.&lt;&#x2F;p&gt;
+&lt;p&gt;I typically use the format &lt;strong&gt;name-of-person&lt;&#x2F;strong&gt; followed by &lt;strong&gt;device-name&lt;&#x2F;strong&gt;. For example, the peer for my phone will be &lt;strong&gt;phil-iphone&lt;&#x2F;strong&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;Create folder to store keys for the peer:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;mkdir -p peers&#x2F;name
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Generate preshared key (not required):&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;wg genpsk &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;tee peers&#x2F;name&#x2F;preshared.psk
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Generate private and public keys for the peer:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;wg genkey &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;tee peers&#x2F;name&#x2F;private.key &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;wg pubkey &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;&amp;gt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt; peers&#x2F;name&#x2F;public.key
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h2 id=&quot;update-server-configuration&quot;&gt;Update server configuration&lt;&#x2F;h2&gt;
+&lt;p&gt;Edit your &lt;code&gt;wg0.conf&lt;&#x2F;code&gt;, add at the bottom:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;ini&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-ini &quot;&gt;&lt;code class=&quot;language-ini&quot; data-lang=&quot;ini&quot;&gt;&lt;span style=&quot;color:#9d0006;&quot;&gt;[Peer]
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#928374;&quot;&gt;# Name = name
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;PublicKey &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;= &amp;lt;&lt;&#x2F;span&gt;&lt;span&gt;peers&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;&#x2F;&lt;&#x2F;span&gt;&lt;span&gt;name&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;&#x2F;&lt;&#x2F;span&gt;&lt;span&gt;public&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span&gt;key&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;PresharedKey &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;= &amp;lt;&lt;&#x2F;span&gt;&lt;span&gt;peers&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;&#x2F;&lt;&#x2F;span&gt;&lt;span&gt;name&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;&#x2F;&lt;&#x2F;span&gt;&lt;span&gt;preshared&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span&gt;psk&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;AllowedIPs &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;10.131.111.2&#x2F;32
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;AllowedIPs &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;10.131.110.0&#x2F;24
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;AllowedIPs &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;10.131.111.0&#x2F;24
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h2 id=&quot;peer-configuration&quot;&gt;Peer configuration&lt;&#x2F;h2&gt;
+&lt;p&gt;Now let&#x27;s create the configuration to give to the peer:&lt;&#x2F;p&gt;
+&lt;p&gt;Create the file&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;peers&#x2F;name&#x2F;philt3r-name.wg.conf
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;And put the following&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;ini&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-ini &quot;&gt;&lt;code class=&quot;language-ini&quot; data-lang=&quot;ini&quot;&gt;&lt;span style=&quot;color:#9d0006;&quot;&gt;[Interface]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;PrivateKey &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;= &amp;lt;&lt;&#x2F;span&gt;&lt;span&gt;peers&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;&#x2F;&lt;&#x2F;span&gt;&lt;span&gt;name&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;&#x2F;&lt;&#x2F;span&gt;&lt;span&gt;private&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span&gt;key&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;Address &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;10.131.111.2&#x2F;24
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#928374;&quot;&gt;#DNS = 10.131.111.1
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#9d0006;&quot;&gt;[Peer]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;PublicKey &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;= &amp;lt;&lt;&#x2F;span&gt;&lt;span&gt;server&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span&gt;public&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span&gt;key&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;PresharedKey &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;= &amp;lt;&lt;&#x2F;span&gt;&lt;span&gt;peers&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;&#x2F;&lt;&#x2F;span&gt;&lt;span&gt;name&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;&#x2F;&lt;&#x2F;span&gt;&lt;span&gt;preshared&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span&gt;psk&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;Endpoint &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;= &amp;lt;&lt;&#x2F;span&gt;&lt;span&gt;server&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span&gt;ip&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;&amp;gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8f3f71;&quot;&gt;51820
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;AllowedIPs &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;10.131.110.0&#x2F;24
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;AllowedIPS &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;10.131.111.0&#x2F;24
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;PersistentKeepalive &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8f3f71;&quot;&gt;25
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;DNS info is not used yet, it&#x27;s normal, I will enable it once my DNS server will be created (not in this blog post though).&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;distribute-config&quot;&gt;Distribute config&lt;&#x2F;h2&gt;
+&lt;p&gt;Either give the configuration file we just created, or you can have multiple choices.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;qr-code&quot;&gt;QR Code&lt;&#x2F;h3&gt;
+&lt;p&gt;Start by installing&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;apk add libqrencode-tools
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;And run &lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;qrencode -t ansiutf8 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt; peers&#x2F;name&#x2F;philt3r-name.wg.conf
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h3 id=&quot;base64&quot;&gt;Base64&lt;&#x2F;h3&gt;
+&lt;p&gt;Note: I&#x27;m using &lt;code&gt;base64&lt;&#x2F;code&gt; on Alpine, which comes from BusyBox, the CLI may be different depending on the operating system you&#x27;re using.&lt;&#x2F;p&gt;
+&lt;p&gt;Encode the configuration file to a base64 string:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;cat philt3r-name.wg.conf &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;base64 -w 0
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;And on the other device, decode the string and save to a file:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;base64 -d &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;&amp;gt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt; philt3r-name.wg.conf
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Put the base64 encoded string, and send a EOF (usually &lt;code&gt;ctrl + d&lt;&#x2F;code&gt;).&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;restart-wireguard&quot;&gt;Restart WireGuard&lt;&#x2F;h2&gt;
+&lt;p&gt;If you already have WireGuard running, simply run&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;rc-service wg restart
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;to restart the server with your new peer.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;start-wireguard-manually&quot;&gt;Start WireGuard manually&lt;&#x2F;h1&gt;
+&lt;p&gt;Make sure to open the port on your router in &lt;strong&gt;UDP&lt;&#x2F;strong&gt; mode! I spent a lot of time debugging to realize that my port was in TCP, double check!&lt;&#x2F;p&gt;
+&lt;p&gt;Make sure to be root before, don&#x27;t use &lt;code&gt;doas&lt;&#x2F;code&gt; or &lt;code&gt;sudo&lt;&#x2F;code&gt;!&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;wg-quick up wg0
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;On the peer, start the tunnel.&lt;&#x2F;p&gt;
+&lt;p&gt;On the server, run&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;wg
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;to check the status of WireGuard. You should see the peer and some stats it is connected.&lt;&#x2F;p&gt;
+&lt;p&gt;If you do not see info about the peer even if it is not connected, that means you did something wrong in the configuration!&lt;&#x2F;p&gt;
+&lt;p&gt;From your peer, you should be able to ping the WireGuard internal IP:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;10.131.111.1
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;ul&gt;
+&lt;li&gt;iOS: &lt;a href=&quot;https:&#x2F;&#x2F;apps.apple.com&#x2F;fr&#x2F;app&#x2F;ping-network-utility&#x2F;id576773404&quot;&gt;Ping&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;OSX &#x2F; Linux: &lt;code&gt;ping&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;If you can ping the ip, you&#x27;re good!&lt;&#x2F;p&gt;
+&lt;p&gt;You may not be able to go on the internet, or even make DNS requests, it&#x27;s normal.&lt;&#x2F;p&gt;
+&lt;p&gt;We are just testing if the tunnel works. You can stop the tunnel.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;stop-wireguard-manually&quot;&gt;Stop WireGuard manually&lt;&#x2F;h1&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;wg-quick down wg0
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h1 id=&quot;script-to-launch-on-server-startup&quot;&gt;Script to launch on server startup&lt;&#x2F;h1&gt;
+&lt;p&gt;To start WireGuard on startup, we will write an OpenRC script. It will be located in&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;&#x2F;etc&#x2F;init.d&#x2F;wg
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Put the following:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;font-style:italic;color:#928374;&quot;&gt;#!&#x2F;sbin&#x2F;openrc-run
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#928374;&quot;&gt;#
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;description&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;quot;WireGuard&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#407959;&quot;&gt;depend&lt;&#x2F;span&gt;&lt;span&gt;() {
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;need localmount net sysctl
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;after bootmisc
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#407959;&quot;&gt;start&lt;&#x2F;span&gt;&lt;span&gt;() {
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;ebegin &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;quot;Starting WireGuard&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;wg-quick up wg0
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;eend $?
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#407959;&quot;&gt;stop&lt;&#x2F;span&gt;&lt;span&gt;() {
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;ebegin &lt;&#x2F;span&gt;&lt;span style=&quot;color:#79740e;&quot;&gt;&amp;quot;Stopping WireGuard&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;wg-quick down wg0
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;eend $?
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#407959;&quot;&gt;status&lt;&#x2F;span&gt;&lt;span&gt;() {
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt;wg show wg0
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Give it executable access&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;chmod +x &#x2F;etc&#x2F;init.d&#x2F;wg
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h2 id=&quot;manual&quot;&gt;Manual&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Start: &lt;code&gt;rc-service wg start&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;Stop: &lt;code&gt;rc-service wg stop&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;Restart: &lt;code&gt;rc-service wg restart&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;Status: &lt;code&gt;rc-service wg status&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;startup&quot;&gt;Startup&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Add at startup: &lt;code&gt;rc-update add wg&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;Remove from startup: &lt;code&gt;rc-update del wg&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;Show services at startup: &lt;code&gt;rc-status&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Reboot and make sure everything works, you should see WireGuard logs when your server is starting.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;resources&quot;&gt;Resources&lt;&#x2F;h1&gt;
+&lt;p&gt;These resources helped me when setting up my WireGuard server. Thanks!&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;pirate&#x2F;wireguard-docs&quot;&gt;https:&#x2F;&#x2F;github.com&#x2F;pirate&#x2F;wireguard-docs&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;blog.ruanbekker.com&#x2F;blog&#x2F;2020&#x2F;01&#x2F;11&#x2F;setup-a-wireguard-vpn-server-on-linux&#x2F;&quot;&gt;https:&#x2F;&#x2F;blog.ruanbekker.com&#x2F;blog&#x2F;2020&#x2F;01&#x2F;11&#x2F;setup-a-wireguard-vpn-server-on-linux&#x2F;&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;try.popho.be&#x2F;wg.html&quot;&gt;https:&#x2F;&#x2F;try.popho.be&#x2F;wg.html&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>how to use the docker of the epitech moulinette</title>
+        <published>2020-01-19T00:00:00+00:00</published>
+        <updated>2020-01-19T00:00:00+00:00</updated>
+        <author>
+          <name>Unknown</name>
+        </author>
+        <link rel="alternate" href="https://blog.x4m3.rocks/docker-epitech-moulinette/" type="text/html"/>
+        <id>https://blog.x4m3.rocks/docker-epitech-moulinette/</id>
+        
+        <content type="html">&lt;p&gt;this guide will show you how to install docker, download the epitech moulinette container and learn how to use it for your projects.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;install&quot;&gt;install&lt;&#x2F;h2&gt;
+&lt;p&gt;ubuntu:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;sudo apt install docker.io
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;arch:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;sudo pacman -S docker
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h2 id=&quot;setup-docker-before-first-use&quot;&gt;setup docker before first use&lt;&#x2F;h2&gt;
+&lt;p&gt;to use docker without root privileges run&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;sudo usermod -aG docker $USER
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;and &lt;strong&gt;REBOOT&lt;&#x2F;strong&gt; your computer afterwards for changes to take effect.&lt;&#x2F;p&gt;
+&lt;p&gt;to start docker on every boot&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;sudo systemctl enable docker
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h2 id=&quot;get-the-epitech-container&quot;&gt;get the epitech container&lt;&#x2F;h2&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;docker pull epitechcontent&#x2F;epitest-docker
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;will download the epitech moulinette environement. make sure to have fast internet, because the container is about 5 gigabytes.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;start-the-container-and-get-a-shell&quot;&gt;start the container and get a shell&lt;&#x2F;h2&gt;
+&lt;p&gt;go into the directory you want to get a shell in the epitech container.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;docker run -it --rm -v $(pwd):&#x2F;home&#x2F;project -w &#x2F;home&#x2F;project epitechcontent&#x2F;epitest-docker &#x2F;bin&#x2F;bash
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;will get you a bash prompt: you are now in the container. run the commands you want, and exit the shell when you are done.&lt;&#x2F;p&gt;
+&lt;p&gt;if you are using docker on windows (inside powershell), run&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;docker run -it --rm -v ${pwd}:&#x2F;home&#x2F;project -w &#x2F;home&#x2F;project epitechcontent&#x2F;epitest-docker &#x2F;bin&#x2F;bash
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>archlinux how old is your installation</title>
+        <published>2019-04-18T00:00:00+00:00</published>
+        <updated>2019-04-18T00:00:00+00:00</updated>
+        <author>
+          <name>Unknown</name>
+        </author>
+        <link rel="alternate" href="https://blog.x4m3.rocks/archlinux-how-old-is-your-installation/" type="text/html"/>
+        <id>https://blog.x4m3.rocks/archlinux-how-old-is-your-installation/</id>
+        
+        <content type="html">&lt;p&gt;on archlinux, to see when you installed arch on your computer, run this command&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;sed -n &amp;quot;&#x2F; installed $1&#x2F;{s&#x2F;].*&#x2F;]&#x2F;p;q}&amp;quot; &#x2F;var&#x2F;log&#x2F;pacman.log
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;it will display the date and the time when you ran &lt;code&gt;pacstrap&lt;&#x2F;code&gt; on the live cd to install your system.&lt;&#x2F;p&gt;
+&lt;p&gt;on my laptop, i get &lt;strong&gt;[2018-10-21 21:05]&lt;&#x2F;strong&gt;, which is when i switched from fedora back to arch because my school required fedora.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>openbsd first setup after install</title>
+        <published>2019-03-01T00:00:00+00:00</published>
+        <updated>2019-03-01T00:00:00+00:00</updated>
+        <author>
+          <name>Unknown</name>
+        </author>
+        <link rel="alternate" href="https://blog.x4m3.rocks/openbsd-setup/" type="text/html"/>
+        <id>https://blog.x4m3.rocks/openbsd-setup/</id>
+        
+        <content type="html">&lt;p&gt;just installed openbsd on my chromebook, seems to be working fine!&lt;&#x2F;p&gt;
+&lt;p&gt;since it&#x27;s my first time using openbsd, here are some stuff that i will start to do on my machines after installing openbsd:&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;enable-doas&quot;&gt;enable &lt;code&gt;doas&lt;&#x2F;code&gt;&lt;&#x2F;h2&gt;
+&lt;p&gt;&lt;code&gt;doas&lt;&#x2F;code&gt; is kinda the equivalent of &lt;code&gt;sudo&lt;&#x2F;code&gt;. to enable it, run &lt;code&gt;cp &#x2F;etc&#x2F;examples&#x2F;doas.conf &#x2F;etc&lt;&#x2F;code&gt; to copy the doas config file.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;disable-root-account&quot;&gt;disable root account&lt;&#x2F;h2&gt;
+&lt;p&gt;now that &lt;code&gt;doas&lt;&#x2F;code&gt; is ready, we dont need to root account anymore. to disable it, run &lt;code&gt;usermod -p&#x27;*&#x27; root&lt;&#x2F;code&gt; to set the root password to &lt;code&gt;*&lt;&#x2F;code&gt;. this will prevent root from log on directly to the machine (with &lt;code&gt;su&lt;&#x2F;code&gt; as an example), but with &lt;code&gt;doas&lt;&#x2F;code&gt; we can run &lt;code&gt;doas sh&lt;&#x2F;code&gt; to get a shell.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;install-missing-firmware-for-your-hardware&quot;&gt;install missing firmware for your hardware&lt;&#x2F;h2&gt;
+&lt;p&gt;maybe your wifi card isn&#x27;t working? or maybe you can&#x27;t display any graphical interface? maybe that&#x27;s because you don&#x27;t have the firmware for it: here&#x27;s how to install it:&lt;&#x2F;p&gt;
+&lt;p&gt;run &lt;code&gt;doas fw_update -i&lt;&#x2F;code&gt; to see the missing firmwares.&lt;&#x2F;p&gt;
+&lt;p&gt;so grab a flash drive, format it in &lt;em&gt;fat&lt;&#x2F;em&gt; filesystem format, go to &lt;a href=&quot;http:&#x2F;&#x2F;firmware.openbsd.org&#x2F;firmware&#x2F;&quot;&gt;firmware.openbsd.org&lt;&#x2F;a&gt;, download the missing firmwares, along with the &lt;strong&gt;SHA256.sig&lt;&#x2F;strong&gt; and &lt;strong&gt;index.txt&lt;&#x2F;strong&gt; files, and put them on the usb key.&lt;&#x2F;p&gt;
+&lt;p&gt;mount the flash drive on openbsd, and run &lt;code&gt;doas fw_update -p *path of flash drive*&lt;&#x2F;code&gt; to install the firmwares from the flash drive.&lt;&#x2F;p&gt;
+&lt;p&gt;your missing firmware should not be anymore.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>how to put a custom boot logo on a thinkpad</title>
+        <published>2019-02-24T00:00:00+00:00</published>
+        <updated>2019-02-24T00:00:00+00:00</updated>
+        <author>
+          <name>Unknown</name>
+        </author>
+        <link rel="alternate" href="https://blog.x4m3.rocks/thinkpad-custom-boot-logo/" type="text/html"/>
+        <id>https://blog.x4m3.rocks/thinkpad-custom-boot-logo/</id>
+        
+        <content type="html">&lt;h2 id=&quot;disclaimer&quot;&gt;disclaimer&lt;&#x2F;h2&gt;
+&lt;p&gt;i need to warn you that you are on your own. even though it works fine, i&#x27;m not responsible of what you do.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;introduction&quot;&gt;introduction&lt;&#x2F;h2&gt;
+&lt;p&gt;you have a thinkpad. it&#x27;s beautiful, it&#x27;s fast, it&#x27;s perfect, it doesn&#x27;t run windows; there&#x27;s just one thing that could be perfect: the boot logo.&lt;&#x2F;p&gt;
+&lt;p&gt;by default on new models, your boot logo look like this:&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;thinkpad-custom-boot-logo&#x2F;default-logo.jpg&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;to get a custom boot logo, you need:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;an internet connection&lt;&#x2F;li&gt;
+&lt;li&gt;a compatible model&lt;&#x2F;li&gt;
+&lt;li&gt;a usb flash drive&lt;&#x2F;li&gt;
+&lt;li&gt;a gif image (you can also use a &lt;em&gt;bmp&lt;&#x2F;em&gt; or a &lt;em&gt;jpg&lt;&#x2F;em&gt; image, but i&#x27;ve found that with &lt;em&gt;gif&lt;&#x2F;em&gt; images it works better)&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;get-the-bios-update&quot;&gt;get the BIOS update&lt;&#x2F;h2&gt;
+&lt;p&gt;to install your custom boot logo, you need to flash a BIOS update.&lt;&#x2F;p&gt;
+&lt;p&gt;to download the BIOS update, go on &lt;a href=&quot;https:&#x2F;&#x2F;pcsupport.lenovo.com&#x2F;us&#x2F;en&quot;&gt;lenovo&#x27;s support website&lt;&#x2F;a&gt;, choose &lt;strong&gt;drivers and updates&lt;&#x2F;strong&gt; and find your model.&lt;&#x2F;p&gt;
+&lt;p&gt;next, go in the section &lt;strong&gt;BIOS&#x2F;UEFI&lt;&#x2F;strong&gt; and download the &lt;strong&gt;BIOS Update (Bootable CD)&lt;&#x2F;strong&gt;. it will download a &lt;em&gt;iso&lt;&#x2F;em&gt; image.&lt;&#x2F;p&gt;
+&lt;p&gt;if you can&#x27;t find the update image, that means that you&#x27;re out of luck, and you can&#x27;t get a custom boot logo. sorry.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;convert-the-iso-image&quot;&gt;convert the iso image&lt;&#x2F;h2&gt;
+&lt;p&gt;now that you have the iso image, you need to convert it to a &lt;em&gt;img&lt;&#x2F;em&gt; file. to do so, run the following command in a terminal:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;geteltorito -o bios-image.img bios-image-downloaded.iso
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;if you don&#x27;t have &lt;strong&gt;geteltorito&lt;&#x2F;strong&gt;, look online to install it.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;flash-the-image-on-your-usb-drive&quot;&gt;flash the image on your usb drive&lt;&#x2F;h2&gt;
+&lt;p&gt;now it&#x27;s time to flash the image on your usb drive. get the name of your flash drive using &lt;code&gt;lsblk&lt;&#x2F;code&gt;, plug your usb drive, and run &lt;code&gt;lsblk&lt;&#x2F;code&gt; again to see your drive.&lt;&#x2F;p&gt;
+&lt;p&gt;go into the folder where the &lt;em&gt;img&lt;&#x2F;em&gt; file is located, and run in a terminal:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;sudo dd if=bios-image.img of=&#x2F;dev&#x2F;sdX bs=1M status=progress oflag=sync
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;where &lt;strong&gt;X&lt;&#x2F;strong&gt; is your drive letter that you know thanks to &lt;code&gt;lsblk&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;get-the-gif-file-to-use&quot;&gt;get the &lt;em&gt;gif&lt;&#x2F;em&gt; file to use&lt;&#x2F;h2&gt;
+&lt;p&gt;if you want, i already have this selection of images ready to be used, or you can make your own!&lt;&#x2F;p&gt;
+&lt;div&gt;
+
+    &lt;a href=&quot;https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;2019-02-24-thinkpad-custom-boot-logo&#x2F;boot-logo&#x2F;tux-verry-small.gif&quot; target=&quot;_blank&quot;&gt;
+      &lt;img src=&quot;https:&amp;#x2F;&amp;#x2F;blog.x4m3.rocks&amp;#x2F;processed_images&amp;#x2F;tux-verry-small.9bd45f15396c7ffa.jpg&quot; &#x2F;&gt;
+    &lt;&#x2F;a&gt;
+    &lt;a href=&quot;https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;2019-02-24-thinkpad-custom-boot-logo&#x2F;boot-logo&#x2F;thinkpad1.gif&quot; target=&quot;_blank&quot;&gt;
+      &lt;img src=&quot;https:&amp;#x2F;&amp;#x2F;blog.x4m3.rocks&amp;#x2F;processed_images&amp;#x2F;thinkpad1.147b5c16ea6432da.jpg&quot; &#x2F;&gt;
+    &lt;&#x2F;a&gt;
+    &lt;a href=&quot;https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;2019-02-24-thinkpad-custom-boot-logo&#x2F;boot-logo&#x2F;apple-rainbow.gif&quot; target=&quot;_blank&quot;&gt;
+      &lt;img src=&quot;https:&amp;#x2F;&amp;#x2F;blog.x4m3.rocks&amp;#x2F;processed_images&amp;#x2F;apple-rainbow.dae843aec90e4fd2.jpg&quot; &#x2F;&gt;
+    &lt;&#x2F;a&gt;
+    &lt;a href=&quot;https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;2019-02-24-thinkpad-custom-boot-logo&#x2F;boot-logo&#x2F;puffy.gif&quot; target=&quot;_blank&quot;&gt;
+      &lt;img src=&quot;https:&amp;#x2F;&amp;#x2F;blog.x4m3.rocks&amp;#x2F;processed_images&amp;#x2F;puffy.00aa29dd6b99e171.jpg&quot; &#x2F;&gt;
+    &lt;&#x2F;a&gt;
+    &lt;a href=&quot;https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;2019-02-24-thinkpad-custom-boot-logo&#x2F;boot-logo&#x2F;darth-vader.gif&quot; target=&quot;_blank&quot;&gt;
+      &lt;img src=&quot;https:&amp;#x2F;&amp;#x2F;blog.x4m3.rocks&amp;#x2F;processed_images&amp;#x2F;darth-vader.8707e38ea58ce5b9.jpg&quot; &#x2F;&gt;
+    &lt;&#x2F;a&gt;
+    &lt;a href=&quot;https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;2019-02-24-thinkpad-custom-boot-logo&#x2F;boot-logo&#x2F;nsa.gif&quot; target=&quot;_blank&quot;&gt;
+      &lt;img src=&quot;https:&amp;#x2F;&amp;#x2F;blog.x4m3.rocks&amp;#x2F;processed_images&amp;#x2F;nsa.881fde7a73711187.jpg&quot; &#x2F;&gt;
+    &lt;&#x2F;a&gt;
+    &lt;a href=&quot;https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;2019-02-24-thinkpad-custom-boot-logo&#x2F;boot-logo&#x2F;pornhub.gif&quot; target=&quot;_blank&quot;&gt;
+      &lt;img src=&quot;https:&amp;#x2F;&amp;#x2F;blog.x4m3.rocks&amp;#x2F;processed_images&amp;#x2F;pornhub.66a33fa0ddb7d786.jpg&quot; &#x2F;&gt;
+    &lt;&#x2F;a&gt;
+    &lt;a href=&quot;https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;2019-02-24-thinkpad-custom-boot-logo&#x2F;boot-logo&#x2F;thinkpad2.gif&quot; target=&quot;_blank&quot;&gt;
+      &lt;img src=&quot;https:&amp;#x2F;&amp;#x2F;blog.x4m3.rocks&amp;#x2F;processed_images&amp;#x2F;thinkpad2.d689f4141765e8ee.jpg&quot; &#x2F;&gt;
+    &lt;&#x2F;a&gt;
+    &lt;a href=&quot;https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;2019-02-24-thinkpad-custom-boot-logo&#x2F;boot-logo&#x2F;epitech.gif&quot; target=&quot;_blank&quot;&gt;
+      &lt;img src=&quot;https:&amp;#x2F;&amp;#x2F;blog.x4m3.rocks&amp;#x2F;processed_images&amp;#x2F;epitech.2fb0f9976e9b5a67.jpg&quot; &#x2F;&gt;
+    &lt;&#x2F;a&gt;
+    &lt;a href=&quot;https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;2019-02-24-thinkpad-custom-boot-logo&#x2F;boot-logo&#x2F;archlinux.gif&quot; target=&quot;_blank&quot;&gt;
+      &lt;img src=&quot;https:&amp;#x2F;&amp;#x2F;blog.x4m3.rocks&amp;#x2F;processed_images&amp;#x2F;archlinux.456d8134dea984ad.jpg&quot; &#x2F;&gt;
+    &lt;&#x2F;a&gt;
+    &lt;a href=&quot;https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;2019-02-24-thinkpad-custom-boot-logo&#x2F;boot-logo&#x2F;vim.gif&quot; target=&quot;_blank&quot;&gt;
+      &lt;img src=&quot;https:&amp;#x2F;&amp;#x2F;blog.x4m3.rocks&amp;#x2F;processed_images&amp;#x2F;vim.aed1174ef81696b6.jpg&quot; &#x2F;&gt;
+    &lt;&#x2F;a&gt;
+&lt;&#x2F;div&gt;
+&lt;p&gt;you can see the requirements, go in your usb drive, open the &lt;strong&gt;readme.txt&lt;&#x2F;strong&gt; in the &lt;em&gt;flash&lt;&#x2F;em&gt; folder.&lt;&#x2F;p&gt;
+&lt;p&gt;put the &lt;em&gt;gif&lt;&#x2F;em&gt; image in the &lt;em&gt;flash&lt;&#x2F;em&gt; folder, and name it &lt;strong&gt;LOGO1.JPG&lt;&#x2F;strong&gt;. copy that image, and name that one &lt;strong&gt;LOGO2.JPG&lt;&#x2F;strong&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;check the &lt;strong&gt;readme.txt&lt;&#x2F;strong&gt; file to see the filenames, they might differ on different models.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;flash-the-bios-update&quot;&gt;flash the BIOS update&lt;&#x2F;h2&gt;
+&lt;p&gt;reboot your computer, and boot on the usb flash drive. if you don&#x27;t know how, the internet should help you with that.&lt;&#x2F;p&gt;
+&lt;p&gt;now that the flash utility has booted, choose the second option, and follow the instructions.&lt;&#x2F;p&gt;
+&lt;p&gt;the computer will reboot, flash the update, and when it will reboot, you should get your custom boot logo!&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;thinkpad-custom-boot-logo&#x2F;custom-logo.jpg&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;if you want to go back to the default logo, simply reflash the bios update, when when asked if you want to use your custom logo, say no, and the default logo will be put back.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>my contributions to the linux kernel</title>
+        <published>2018-04-10T00:00:00+00:00</published>
+        <updated>2018-04-10T00:00:00+00:00</updated>
+        <author>
+          <name>Unknown</name>
+        </author>
+        <link rel="alternate" href="https://blog.x4m3.rocks/linux-kernel-contributions/" type="text/html"/>
+        <id>https://blog.x4m3.rocks/linux-kernel-contributions/</id>
+        
+        <content type="html">&lt;p&gt;you read it right! i am a contributor to the linux kernel!&lt;&#x2F;p&gt;
+&lt;p&gt;... but you are going to be dissapointed: my contributions are not going to change the world, just comments, alignments and documentation and stuff...&lt;&#x2F;p&gt;
+&lt;p&gt;i submited something like 10 patches (as of april 10, 2018) and 3 patches have been accepted and are now into the kernel!&lt;&#x2F;p&gt;
+&lt;p&gt;if you wanna check them out, you can read them on &lt;a href=&quot;https:&#x2F;&#x2F;git.kernel.org&#x2F;cgit&#x2F;linux&#x2F;kernel&#x2F;git&#x2F;torvalds&#x2F;linux.git&#x2F;log&#x2F;?qt=author&amp;amp;q=Philippe+Loctaux&quot;&gt;kernel.org&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;yes, i am aware that Linus has a copy of the repo on github, but when &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;torvalds&#x2F;linux&#x2F;commits?author=x4m3&quot;&gt;i try to see my commits on github&lt;&#x2F;a&gt;, i can&#x27;t get them because there is too many commits and github can&#x27;t get me the list.&lt;&#x2F;p&gt;
+&lt;p&gt;so, here are my kernel contributions, listed by date:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;torvalds&#x2F;linux&#x2F;commit&#x2F;81c18a9e378c87ed6559a4b0a0c2831c88947373&quot;&gt;feb 23, 2016&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;torvalds&#x2F;linux&#x2F;commit&#x2F;ce6550818280c1e7caae727d2b9504140b6370f0&quot;&gt;mar 7, 2016&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;torvalds&#x2F;linux&#x2F;commit&#x2F;9d4c0c9f6a747a9bdec03057be4193994839ec87&quot;&gt;dec 28, 2017&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>restart chrome with a url</title>
+        <published>2018-04-09T00:00:00+00:00</published>
+        <updated>2018-04-09T00:00:00+00:00</updated>
+        <author>
+          <name>Unknown</name>
+        </author>
+        <link rel="alternate" href="https://blog.x4m3.rocks/restart-chrome-url/" type="text/html"/>
+        <id>https://blog.x4m3.rocks/restart-chrome-url/</id>
+        
+        <content type="html">&lt;p&gt;did you know that you can restart chrome&#x2F;chromium with a simple url?&lt;&#x2F;p&gt;
+&lt;p&gt;here is it: &lt;a href=&quot;about:&#x2F;&#x2F;restart&quot;&gt;about:&#x2F;&#x2F;restart&lt;&#x2F;a&gt; !&lt;&#x2F;p&gt;
+&lt;p&gt;but this trick does not work with the &lt;code&gt;&amp;lt;a&amp;gt;&lt;&#x2F;code&gt; html tag, which seems logical, copy the link and paste it in a new tab to get it to work&lt;&#x2F;p&gt;
+&lt;p&gt;it&#x27;d be annoying as fuck if you could click on links that restart your browser, imagine if an extension could replace every clickable link with this one! 😊&lt;&#x2F;p&gt;
+&lt;p&gt;i think its usage is for chrome developers, the end user doesn&#x27;t really care to type a url to restart their browser, they click on the &lt;code&gt;x&lt;&#x2F;code&gt; and they reopen it (duh).&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>error on zsh when using vim and autocomplete</title>
+        <published>2018-03-13T00:00:00+00:00</published>
+        <updated>2018-03-13T00:00:00+00:00</updated>
+        <author>
+          <name>Unknown</name>
+        </author>
+        <link rel="alternate" href="https://blog.x4m3.rocks/zsh-vim-autocomplete-error/" type="text/html"/>
+        <id>https://blog.x4m3.rocks/zsh-vim-autocomplete-error/</id>
+        
+        <content type="html">&lt;p&gt;do you use &lt;strong&gt;zsh&lt;&#x2F;strong&gt; and &lt;strong&gt;ohmyzsh&lt;&#x2F;strong&gt; ?&lt;&#x2F;p&gt;
+&lt;p&gt;do you run into an issue when you are about to edit a file with vim, and you use the &lt;strong&gt;Tab&lt;&#x2F;strong&gt; key to autocomplete the filename, but instead you get something like this:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;$ vim ~&#x2F;filena&amp;lt;TAB&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;_arguments:448: _vim_files: function definition file not found
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;annoying af, right ?&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;how-to-fix-it&quot;&gt;how to fix it&lt;&#x2F;h2&gt;
+&lt;p&gt;here&#x27;s how to fix it: delete the zcompdump directory off your personal directory, and reload your zsh config file (or close and open a new shell).&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;rm -rf ~&#x2F;.zcompdump*; source ~&#x2F;.zshrc;
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;it took me at least 15 mins to find that .... hopefully i save some time for you .&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;sources&quot;&gt;sources&lt;&#x2F;h3&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;unix.stackexchange.com&#x2F;questions&#x2F;280622&#x2F;zsh-fails-at-path-completition-when-command-is-vim#280626&quot;&gt;stackoverflow&lt;&#x2F;a&gt; and &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;robbyrussell&#x2F;oh-my-zsh&#x2F;issues&#x2F;518&quot;&gt;github&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>how to link your vimrc file on windows</title>
+        <published>2018-02-17T00:00:00+00:00</published>
+        <updated>2018-02-17T00:00:00+00:00</updated>
+        <author>
+          <name>Unknown</name>
+        </author>
+        <link rel="alternate" href="https://blog.x4m3.rocks/link-your-vimrc-file-on-windows/" type="text/html"/>
+        <id>https://blog.x4m3.rocks/link-your-vimrc-file-on-windows/</id>
+        
+        <content type="html">&lt;p&gt;i code on my linux machine, and i use vim as my text editor.&lt;br &#x2F;&gt;
+i&#x27;ve been using vim for almost 4 years, and i started to make my config file.&lt;br &#x2F;&gt;
+i store it with git, along all my config files for my linux setup (aka my dot files).&lt;&#x2F;p&gt;
+&lt;p&gt;here&#x27;s the thing, i also use windows to code, and i also use vim.&lt;br &#x2F;&gt;
+i also want to use the same config that i store in git.&lt;&#x2F;p&gt;
+&lt;p&gt;to do so i need to do a symbolink link to my vimrc file. i dunno how to do that on windows.&lt;&#x2F;p&gt;
+&lt;p&gt;here&#x27;s how to do it:&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;cmd&quot;&gt;cmd&lt;&#x2F;h2&gt;
+&lt;p&gt;if you use the old school, black boxed &lt;strong&gt;cmd.exe&lt;&#x2F;strong&gt;, you need to run these commands:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;cd c:\users\_username_
+&lt;&#x2F;span&gt;&lt;span&gt;mklink .vimrc _path-to-vimrc_
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;and you should be good to go.&lt;br &#x2F;&gt;
+just make sure it has been linked correctly with &lt;code&gt;vim ~&#x2F;.vimrc&lt;&#x2F;code&gt;&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;powershell&quot;&gt;powershell&lt;&#x2F;h2&gt;
+&lt;p&gt;if you use the new, blue boxed &lt;strong&gt;powershell.exe&lt;&#x2F;strong&gt;, it&#x27;s a bit different:&lt;br &#x2F;&gt;
+you can make it with powershell&#x27;s language (or whatever they call the stuff they&#x27;re using), but some require admin privileges, some require custom functions or something like that...&lt;&#x2F;p&gt;
+&lt;p&gt;or you can keep it simple and use the &lt;strong&gt;cmd&lt;&#x2F;strong&gt; command to use &lt;strong&gt;cmd.exe&lt;&#x2F;strong&gt; to run the &lt;strong&gt;mklink&lt;&#x2F;strong&gt; program to make the symlink:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;powershell&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-powershell &quot;&gt;&lt;code class=&quot;language-powershell&quot; data-lang=&quot;powershell&quot;&gt;&lt;span&gt;cd c:\users\_username_
+&lt;&#x2F;span&gt;&lt;span&gt;cmd &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;&#x2F;&lt;&#x2F;span&gt;&lt;span&gt;c mklink .vimrc _path&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span&gt;to&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span&gt;vimrc_
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h2 id=&quot;sources&quot;&gt;sources&lt;&#x2F;h2&gt;
+&lt;p&gt;i found &lt;a href=&quot;http:&#x2F;&#x2F;saadware.com&#x2F;windows-vimrc-link&#x2F;&quot;&gt;this blog post&lt;&#x2F;a&gt; to find out how to do symlinks on cmd,&lt;br &#x2F;&gt;
+and i used &lt;a href=&quot;https:&#x2F;&#x2F;en.wikipedia.org&#x2F;wiki&#x2F;NTFS_symbolic_link#Tools&quot;&gt;this wikipedia article&lt;&#x2F;a&gt; and &lt;a href=&quot;https:&#x2F;&#x2F;stackoverflow.com&#x2F;a&#x2F;5549583&quot;&gt;this stackoverflow thread&lt;&#x2F;a&gt; to learn how to do it on powershell.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>dd status</title>
+        <published>2016-07-14T00:00:00+00:00</published>
+        <updated>2016-07-14T00:00:00+00:00</updated>
+        <author>
+          <name>Unknown</name>
+        </author>
+        <link rel="alternate" href="https://blog.x4m3.rocks/dd-status/" type="text/html"/>
+        <id>https://blog.x4m3.rocks/dd-status/</id>
+        
+        <content type="html">&lt;p&gt;Here&#x27;s a cool tip if you use dd to copy disk images to a disk, or if you want to clone drives.&lt;&#x2F;p&gt;
+&lt;p&gt;As we all know (or should know), dd is a powerful tool; but it can be dangerous if not manipulated correctly.&lt;&#x2F;p&gt;
+&lt;p&gt;By default, dd doesn&#x27;t give any information on what is it doing; which can be very boring, because you don&#x27;t know when you&#x27;ll be able to test that new Linux distro you just discovered!&lt;&#x2F;p&gt;
+&lt;p&gt;Well, good news! You can get some status from dd! This tip works on Linux and OS X.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;linux&quot;&gt;Linux&lt;&#x2F;h2&gt;
+&lt;p&gt;When you enter your &lt;code&gt;dd&lt;&#x2F;code&gt; command, add this little snippet at the end:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;status=progress
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;When dd will be busy doing its thing, you should get some info about its progress.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;os-x&quot;&gt;OS X&lt;&#x2F;h2&gt;
+&lt;p&gt;Run your dd command normally without &lt;code&gt;status=progress&lt;&#x2F;code&gt;, after that open a new terminal and enter this command:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;while pgrep ^dd; do sudo pkill -INFO dd; sleep 30; done;
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;And come back into the dd command. When the dd task will be done, the second command we ran will exit as well and you can close that other terminal safely.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;code&gt;30&lt;&#x2F;code&gt; is the number of seconds that will update the counter every X seconds.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+</feed>

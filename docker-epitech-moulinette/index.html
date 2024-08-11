@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>how to use the docker of the epitech moulinette &middot; deadbaed</title>
+    <meta name="description" content="broke my bed now it&amp;#x27;s dead" />
+    <link rel="shortcut icon"  href="https://blog.x4m3.rocks/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="https://blog.x4m3.rocks/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://blog.x4m3.rocks/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://blog.x4m3.rocks/favicon-16x16.png">
+    <link rel="mask-icon" href="https://blog.x4m3.rocks/safari-pinned-tab.svg" color="#5bbad5">
+
+    <link rel="alternate" type="application/atom+xml" title="RSS" href="https://blog.x4m3.rocks/atom.xml">
+
+    <style>html,body{background:#fffaf7;color:#2d2d2d;font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol"}a,a:visited{color:darkred;text-decoration:none}a:hover{text-decoration:underline}main{margin:auto;max-width:38rem;padding:.8rem}pre{background:#fff;overflow:scroll;padding:1rem}td{border:1px solid #2d2d2d;padding:10px}img{height:auto;max-width:100%}.homepage-list{list-style:none;padding:1rem 0}.homepage-list li{align-items:center;display:flex;flex-wrap:wrap;justify-content:space-between;margin-bottom:10px}@media (max-width: 38rem){.homepage-list li a{width:100%}}</style>
+
+    <meta property="og:site_name" content="deadbaed">
+      
+      <meta property="og:title" content="how to use the docker of the epitech moulinette">
+      <meta property="og:description" content="">
+      <meta property="og:url" content="https://blog.x4m3.rocks/docker-epitech-moulinette/">
+      <meta property="og:image" content="">
+
+      <meta property="og:type" content="article" />
+        <meta property="article:published_time" content="2020-01-19T00:00:00+00:00" />
+
+      
+      
+    
+
+    <script defer data-domain="blog.x4m3.rocks" src="https://plausible.y.z.x4m3.rocks/js/script.js"></script>
+  </head>
+  
+
+  <body>
+    <main id="main" role="main">
+
+      
+      <header role="banner">
+        <h3 style="margin-top:0;">
+          <a href="https://blog.x4m3.rocks" title="Home">deadbaed</a>
+          <br /><small>broke my bed now it&#x27;s dead</small>
+        </h3>
+
+        <div class="search-container">
+          <input type="text" id="search" placeholder="Search..." style="width: 100%;">
+          <div class="search-results">
+            <div class="search-results__items"></div>
+          </div>
+        </div>
+      </header>
+      <hr />
+      
+
+      
+<article>
+  <h1>how to use the docker of the epitech moulinette</h1>
+
+  
+    <p style="font-size:90%;">Posted on <time datetime="2020-01-19T00:00:00+00:00">January 19, 2020</time></p>
+  
+
+  <p>this guide will show you how to install docker, download the epitech moulinette container and learn how to use it for your projects.</p>
+<h2 id="install">install</h2>
+<p>ubuntu:</p>
+<pre style="background-color:#fcf0ca;color:#282828aa;"><code><span>sudo apt install docker.io
+</span></code></pre>
+<p>arch:</p>
+<pre style="background-color:#fcf0ca;color:#282828aa;"><code><span>sudo pacman -S docker
+</span></code></pre>
+<h2 id="setup-docker-before-first-use">setup docker before first use</h2>
+<p>to use docker without root privileges run</p>
+<pre style="background-color:#fcf0ca;color:#282828aa;"><code><span>sudo usermod -aG docker $USER
+</span></code></pre>
+<p>and <strong>REBOOT</strong> your computer afterwards for changes to take effect.</p>
+<p>to start docker on every boot</p>
+<pre style="background-color:#fcf0ca;color:#282828aa;"><code><span>sudo systemctl enable docker
+</span></code></pre>
+<h2 id="get-the-epitech-container">get the epitech container</h2>
+<pre style="background-color:#fcf0ca;color:#282828aa;"><code><span>docker pull epitechcontent/epitest-docker
+</span></code></pre>
+<p>will download the epitech moulinette environement. make sure to have fast internet, because the container is about 5 gigabytes.</p>
+<h2 id="start-the-container-and-get-a-shell">start the container and get a shell</h2>
+<p>go into the directory you want to get a shell in the epitech container.</p>
+<pre style="background-color:#fcf0ca;color:#282828aa;"><code><span>docker run -it --rm -v $(pwd):/home/project -w /home/project epitechcontent/epitest-docker /bin/bash
+</span></code></pre>
+<p>will get you a bash prompt: you are now in the container. run the commands you want, and exit the shell when you are done.</p>
+<p>if you are using docker on windows (inside powershell), run</p>
+<pre style="background-color:#fcf0ca;color:#282828aa;"><code><span>docker run -it --rm -v ${pwd}:/home/project -w /home/project epitechcontent/epitest-docker /bin/bash
+</span></code></pre>
+
+</article>
+
+
+      
+      <footer role="contentinfo">
+        <hr />
+        
+        <nav style="margin-bottom:1rem;" role="navigation">
+          
+            <a href="https://blog.x4m3.rocks/atom.xml">RSS</a>
+            
+              <span>&middot;</span>
+            
+          
+            <a href="https://philippeloctaux.com">Website</a>
+            
+          
+        </nav>
+        
+        
+        
+      </footer>
+      
+
+    </main>
+    
+    
+
+    <script type="text/javascript" src="https://blog.x4m3.rocks/elasticlunr.min.js"></script>
+    <script type="text/javascript" src="https://blog.x4m3.rocks/search.js"></script>
+  </body>
+</html>
+

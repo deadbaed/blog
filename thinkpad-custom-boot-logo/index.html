@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>how to put a custom boot logo on a thinkpad &middot; deadbaed</title>
+    <meta name="description" content="broke my bed now it&amp;#x27;s dead" />
+    <link rel="shortcut icon"  href="https://blog.x4m3.rocks/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="https://blog.x4m3.rocks/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://blog.x4m3.rocks/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://blog.x4m3.rocks/favicon-16x16.png">
+    <link rel="mask-icon" href="https://blog.x4m3.rocks/safari-pinned-tab.svg" color="#5bbad5">
+
+    <link rel="alternate" type="application/atom+xml" title="RSS" href="https://blog.x4m3.rocks/atom.xml">
+
+    <style>html,body{background:#fffaf7;color:#2d2d2d;font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol"}a,a:visited{color:darkred;text-decoration:none}a:hover{text-decoration:underline}main{margin:auto;max-width:38rem;padding:.8rem}pre{background:#fff;overflow:scroll;padding:1rem}td{border:1px solid #2d2d2d;padding:10px}img{height:auto;max-width:100%}.homepage-list{list-style:none;padding:1rem 0}.homepage-list li{align-items:center;display:flex;flex-wrap:wrap;justify-content:space-between;margin-bottom:10px}@media (max-width: 38rem){.homepage-list li a{width:100%}}</style>
+
+    <meta property="og:site_name" content="deadbaed">
+      
+      <meta property="og:title" content="how to put a custom boot logo on a thinkpad">
+      <meta property="og:description" content="">
+      <meta property="og:url" content="https://blog.x4m3.rocks/thinkpad-custom-boot-logo/">
+      <meta property="og:image" content="">
+
+      <meta property="og:type" content="article" />
+        <meta property="article:published_time" content="2019-02-24T00:00:00+00:00" />
+
+      
+      
+    
+
+    <script defer data-domain="blog.x4m3.rocks" src="https://plausible.y.z.x4m3.rocks/js/script.js"></script>
+  </head>
+  
+
+  <body>
+    <main id="main" role="main">
+
+      
+      <header role="banner">
+        <h3 style="margin-top:0;">
+          <a href="https://blog.x4m3.rocks" title="Home">deadbaed</a>
+          <br /><small>broke my bed now it&#x27;s dead</small>
+        </h3>
+
+        <div class="search-container">
+          <input type="text" id="search" placeholder="Search..." style="width: 100%;">
+          <div class="search-results">
+            <div class="search-results__items"></div>
+          </div>
+        </div>
+      </header>
+      <hr />
+      
+
+      
+<article>
+  <h1>how to put a custom boot logo on a thinkpad</h1>
+
+  
+    <p style="font-size:90%;">Posted on <time datetime="2019-02-24T00:00:00+00:00">February 24, 2019</time></p>
+  
+
+  <h2 id="disclaimer">disclaimer</h2>
+<p>i need to warn you that you are on your own. even though it works fine, i'm not responsible of what you do.</p>
+<h2 id="introduction">introduction</h2>
+<p>you have a thinkpad. it's beautiful, it's fast, it's perfect, it doesn't run windows; there's just one thing that could be perfect: the boot logo.</p>
+<p>by default on new models, your boot logo look like this:</p>
+<p><img src="https://blog.x4m3.rocks/thinkpad-custom-boot-logo/default-logo.jpg" alt="" /></p>
+<p>to get a custom boot logo, you need:</p>
+<ul>
+<li>an internet connection</li>
+<li>a compatible model</li>
+<li>a usb flash drive</li>
+<li>a gif image (you can also use a <em>bmp</em> or a <em>jpg</em> image, but i've found that with <em>gif</em> images it works better)</li>
+</ul>
+<h2 id="get-the-bios-update">get the BIOS update</h2>
+<p>to install your custom boot logo, you need to flash a BIOS update.</p>
+<p>to download the BIOS update, go on <a href="https://pcsupport.lenovo.com/us/en">lenovo's support website</a>, choose <strong>drivers and updates</strong> and find your model.</p>
+<p>next, go in the section <strong>BIOS/UEFI</strong> and download the <strong>BIOS Update (Bootable CD)</strong>. it will download a <em>iso</em> image.</p>
+<p>if you can't find the update image, that means that you're out of luck, and you can't get a custom boot logo. sorry.</p>
+<h2 id="convert-the-iso-image">convert the iso image</h2>
+<p>now that you have the iso image, you need to convert it to a <em>img</em> file. to do so, run the following command in a terminal:</p>
+<pre style="background-color:#fcf0ca;color:#282828aa;"><code><span>geteltorito -o bios-image.img bios-image-downloaded.iso
+</span></code></pre>
+<p>if you don't have <strong>geteltorito</strong>, look online to install it.</p>
+<h2 id="flash-the-image-on-your-usb-drive">flash the image on your usb drive</h2>
+<p>now it's time to flash the image on your usb drive. get the name of your flash drive using <code>lsblk</code>, plug your usb drive, and run <code>lsblk</code> again to see your drive.</p>
+<p>go into the folder where the <em>img</em> file is located, and run in a terminal:</p>
+<pre style="background-color:#fcf0ca;color:#282828aa;"><code><span>sudo dd if=bios-image.img of=/dev/sdX bs=1M status=progress oflag=sync
+</span></code></pre>
+<p>where <strong>X</strong> is your drive letter that you know thanks to <code>lsblk</code>.</p>
+<h2 id="get-the-gif-file-to-use">get the <em>gif</em> file to use</h2>
+<p>if you want, i already have this selection of images ready to be used, or you can make your own!</p>
+<div>
+
+    <a href="https://blog.x4m3.rocks/2019-02-24-thinkpad-custom-boot-logo/boot-logo/tux-verry-small.gif" target="_blank">
+      <img src="https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;processed_images&#x2F;tux-verry-small.9bd45f15396c7ffa.jpg" />
+    </a>
+    <a href="https://blog.x4m3.rocks/2019-02-24-thinkpad-custom-boot-logo/boot-logo/thinkpad1.gif" target="_blank">
+      <img src="https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;processed_images&#x2F;thinkpad1.147b5c16ea6432da.jpg" />
+    </a>
+    <a href="https://blog.x4m3.rocks/2019-02-24-thinkpad-custom-boot-logo/boot-logo/apple-rainbow.gif" target="_blank">
+      <img src="https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;processed_images&#x2F;apple-rainbow.dae843aec90e4fd2.jpg" />
+    </a>
+    <a href="https://blog.x4m3.rocks/2019-02-24-thinkpad-custom-boot-logo/boot-logo/puffy.gif" target="_blank">
+      <img src="https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;processed_images&#x2F;puffy.00aa29dd6b99e171.jpg" />
+    </a>
+    <a href="https://blog.x4m3.rocks/2019-02-24-thinkpad-custom-boot-logo/boot-logo/darth-vader.gif" target="_blank">
+      <img src="https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;processed_images&#x2F;darth-vader.8707e38ea58ce5b9.jpg" />
+    </a>
+    <a href="https://blog.x4m3.rocks/2019-02-24-thinkpad-custom-boot-logo/boot-logo/nsa.gif" target="_blank">
+      <img src="https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;processed_images&#x2F;nsa.881fde7a73711187.jpg" />
+    </a>
+    <a href="https://blog.x4m3.rocks/2019-02-24-thinkpad-custom-boot-logo/boot-logo/pornhub.gif" target="_blank">
+      <img src="https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;processed_images&#x2F;pornhub.66a33fa0ddb7d786.jpg" />
+    </a>
+    <a href="https://blog.x4m3.rocks/2019-02-24-thinkpad-custom-boot-logo/boot-logo/thinkpad2.gif" target="_blank">
+      <img src="https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;processed_images&#x2F;thinkpad2.d689f4141765e8ee.jpg" />
+    </a>
+    <a href="https://blog.x4m3.rocks/2019-02-24-thinkpad-custom-boot-logo/boot-logo/epitech.gif" target="_blank">
+      <img src="https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;processed_images&#x2F;epitech.2fb0f9976e9b5a67.jpg" />
+    </a>
+    <a href="https://blog.x4m3.rocks/2019-02-24-thinkpad-custom-boot-logo/boot-logo/archlinux.gif" target="_blank">
+      <img src="https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;processed_images&#x2F;archlinux.456d8134dea984ad.jpg" />
+    </a>
+    <a href="https://blog.x4m3.rocks/2019-02-24-thinkpad-custom-boot-logo/boot-logo/vim.gif" target="_blank">
+      <img src="https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;processed_images&#x2F;vim.aed1174ef81696b6.jpg" />
+    </a>
+</div>
+<p>you can see the requirements, go in your usb drive, open the <strong>readme.txt</strong> in the <em>flash</em> folder.</p>
+<p>put the <em>gif</em> image in the <em>flash</em> folder, and name it <strong>LOGO1.JPG</strong>. copy that image, and name that one <strong>LOGO2.JPG</strong>.</p>
+<p>check the <strong>readme.txt</strong> file to see the filenames, they might differ on different models.</p>
+<h2 id="flash-the-bios-update">flash the BIOS update</h2>
+<p>reboot your computer, and boot on the usb flash drive. if you don't know how, the internet should help you with that.</p>
+<p>now that the flash utility has booted, choose the second option, and follow the instructions.</p>
+<p>the computer will reboot, flash the update, and when it will reboot, you should get your custom boot logo!</p>
+<p><img src="https://blog.x4m3.rocks/thinkpad-custom-boot-logo/custom-logo.jpg" alt="" /></p>
+<p>if you want to go back to the default logo, simply reflash the bios update, when when asked if you want to use your custom logo, say no, and the default logo will be put back.</p>
+
+</article>
+
+
+      
+      <footer role="contentinfo">
+        <hr />
+        
+        <nav style="margin-bottom:1rem;" role="navigation">
+          
+            <a href="https://blog.x4m3.rocks/atom.xml">RSS</a>
+            
+              <span>&middot;</span>
+            
+          
+            <a href="https://philippeloctaux.com">Website</a>
+            
+          
+        </nav>
+        
+        
+        
+      </footer>
+      
+
+    </main>
+    
+    
+
+    <script type="text/javascript" src="https://blog.x4m3.rocks/elasticlunr.min.js"></script>
+    <script type="text/javascript" src="https://blog.x4m3.rocks/search.js"></script>
+  </body>
+</html>
+

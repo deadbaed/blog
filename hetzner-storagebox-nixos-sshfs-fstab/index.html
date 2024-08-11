@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Automount a Hetzner Storage Box with sshfs on NixOS &middot; deadbaed</title>
+    <meta name="description" content="broke my bed now it&amp;#x27;s dead" />
+    <link rel="shortcut icon"  href="https://blog.x4m3.rocks/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="https://blog.x4m3.rocks/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://blog.x4m3.rocks/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://blog.x4m3.rocks/favicon-16x16.png">
+    <link rel="mask-icon" href="https://blog.x4m3.rocks/safari-pinned-tab.svg" color="#5bbad5">
+
+    <link rel="alternate" type="application/atom+xml" title="RSS" href="https://blog.x4m3.rocks/atom.xml">
+
+    <style>html,body{background:#fffaf7;color:#2d2d2d;font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol"}a,a:visited{color:darkred;text-decoration:none}a:hover{text-decoration:underline}main{margin:auto;max-width:38rem;padding:.8rem}pre{background:#fff;overflow:scroll;padding:1rem}td{border:1px solid #2d2d2d;padding:10px}img{height:auto;max-width:100%}.homepage-list{list-style:none;padding:1rem 0}.homepage-list li{align-items:center;display:flex;flex-wrap:wrap;justify-content:space-between;margin-bottom:10px}@media (max-width: 38rem){.homepage-list li a{width:100%}}</style>
+
+    <meta property="og:site_name" content="deadbaed">
+      
+      <meta property="og:title" content="Automount a Hetzner Storage Box with sshfs on NixOS">
+      <meta property="og:description" content="">
+      <meta property="og:url" content="https://blog.x4m3.rocks/hetzner-storagebox-nixos-sshfs-fstab/">
+      <meta property="og:image" content="">
+
+      <meta property="og:type" content="article" />
+        <meta property="article:published_time" content="2024-08-10T00:00:00+00:00" />
+
+      
+      
+    
+
+    <script defer data-domain="blog.x4m3.rocks" src="https://plausible.y.z.x4m3.rocks/js/script.js"></script>
+  </head>
+  
+
+  <body>
+    <main id="main" role="main">
+
+      
+      <header role="banner">
+        <h3 style="margin-top:0;">
+          <a href="https://blog.x4m3.rocks" title="Home">deadbaed</a>
+          <br /><small>broke my bed now it&#x27;s dead</small>
+        </h3>
+
+        <div class="search-container">
+          <input type="text" id="search" placeholder="Search..." style="width: 100%;">
+          <div class="search-results">
+            <div class="search-results__items"></div>
+          </div>
+        </div>
+      </header>
+      <hr />
+      
+
+      
+<article>
+  <h1>Automount a Hetzner Storage Box with sshfs on NixOS</h1>
+
+  
+    <p style="font-size:90%;">Posted on <time datetime="2024-08-10T00:00:00+00:00">August 10, 2024</time></p>
+  
+
+  <p>I had my eyes on some nice arm64 servers from Hetzner, and I finally pulled the trigger, I got the <code>CAX21</code>.</p>
+<p>It is also the opportunity to reduce time of maintaining my infrastructure, I will use NixOS to setup my server.
+By having a couple of configuration files, it will be easier to review, edit and update the system.</p>
+<p>But time will tell if it is the good decision, and not sticking to a imperative distribution such as Debian.</p>
+<h1 id="not-a-lot-of-storage">Not a lot of storage</h1>
+<p>The only downside with these servers is the storage -- I only have 80 gigabytes of storage on mine.
+Fortunately, Hetzner has their <strong>Storage Box</strong> offerings, I picked up a <code>BX11</code> which has 1 terabyte of storage!</p>
+<p>The plan is to mount the storage box as a regular drive and have applications use it normally.
+The main applications will be documents, media, backups -- not speed critical data such as databases or logs.</p>
+<h1 id="storage-box-ordering-and-setup">Storage Box ordering and setup</h1>
+<p>Start by ordering your Storage Box, I think mine took less than an hour to be provisioned and delivered to me.</p>
+<p>On the configuration panel, I only ticked <code>SSH support</code> and the disabled the rest.
+If you will use the storage box outside of the Hetzner network, enable <code>External reachability</code>.</p>
+<p>Finally, you cannot set the password yourself, you will have to reset it.</p>
+<h1 id="ssh-keys">SSH keys</h1>
+<p>On the server, generate a new ssh key with <code>ssh-keygen</code> which will be used to connect to the storage box.</p>
+<p>Since I want the storage box to be mounted automatically on startup, so I did not set a passphrase on the key.</p>
+<p>Copy the ssh to the storage box with:</p>
+<pre data-lang="shell" style="background-color:#fcf0ca;color:#282828aa;" class="language-shell "><code class="language-shell" data-lang="shell"><span>ssh-copy-id -p 23 -s user@storagebox.example.org
+</span></code></pre>
+<p>More documentation on ssh keys with storage box: <a href="https://docs.hetzner.com/robot/storage-box/backup-space-ssh-keys">https://docs.hetzner.com/robot/storage-box/backup-space-ssh-keys</a></p>
+<h1 id="nixos-configuration">NixOS configuration</h1>
+<p>The easy part, and the reason why I think I will like to use NixOS on my server:</p>
+<p>You can put it inside your <code>configuration.nix</code> directly, I placed it inside its own file.</p>
+<pre data-lang="nix" style="background-color:#fcf0ca;color:#282828aa;" class="language-nix "><code class="language-nix" data-lang="nix"><span style="color:#8f3f71;">{ </span><span style="color:#b23c15;">... </span><span style="color:#8f3f71;">}</span><span>:
+</span><span>
+</span><span>{
+</span><span>  </span><span style="color:#407959;">fileSystems</span><span>.</span><span style="color:#79740e;">&quot;/mnt/storagebox&quot; </span><span style="color:#b23c15;">= </span><span>{
+</span><span>    </span><span style="color:#407959;">device </span><span style="color:#b23c15;">= </span><span style="color:#79740e;">&quot;user@storagebox.example.org:/some/path&quot;</span><span>;
+</span><span>    </span><span style="color:#407959;">fsType </span><span style="color:#b23c15;">= </span><span style="color:#79740e;">&quot;fuse.sshfs&quot;</span><span>;
+</span><span>    </span><span style="color:#407959;">options </span><span style="color:#b23c15;">= </span><span>[
+</span><span>      </span><span style="color:#79740e;">&quot;identityfile=/place/to/ssh/key/somewhere&quot;
+</span><span>      </span><span style="color:#79740e;">&quot;idmap=user&quot;
+</span><span>      </span><span style="color:#79740e;">&quot;x-systemd.automount&quot; </span><span style="font-style:italic;color:#928374;"># mount the filesystem automatically on first access
+</span><span>      </span><span style="color:#79740e;">&quot;allow_other&quot; </span><span style="font-style:italic;color:#928374;"># don&#39;t restrict access to only the user which `mount`s it (because that&#39;s probably systemd who mounts it, not you)
+</span><span>      </span><span style="color:#79740e;">&quot;user&quot; </span><span style="font-style:italic;color:#928374;"># allow manual `mount`ing, as ordinary user.
+</span><span>      </span><span style="color:#79740e;">&quot;_netdev&quot;
+</span><span>    ];
+</span><span>  };
+</span><span>  </span><span style="color:#407959;">boot</span><span>.</span><span style="color:#407959;">supportedFilesystems</span><span>.</span><span style="color:#79740e;">&quot;fuse.sshfs&quot; </span><span style="color:#b23c15;">= </span><span style="color:#8f3f71;">true</span><span>;
+</span><span>}
+</span></code></pre>
+<p>Thank you so much to <a href="https://discourse.nixos.org/t/how-to-auto-mount-with-sshfs-as-a-normal-user/48276/3?u=philt3r">this Discourse post</a> for the configuration snippet!</p>
+<p>Run</p>
+<pre data-lang="shell" style="background-color:#fcf0ca;color:#282828aa;" class="language-shell "><code class="language-shell" data-lang="shell"><span>nixos-rebuild switch &amp;&amp; cd /mnt/storagebox
+</span></code></pre>
+<p>and you are able to read and write files!</p>
+
+</article>
+
+
+      
+      <footer role="contentinfo">
+        <hr />
+        
+        <nav style="margin-bottom:1rem;" role="navigation">
+          
+            <a href="https://blog.x4m3.rocks/atom.xml">RSS</a>
+            
+              <span>&middot;</span>
+            
+          
+            <a href="https://philippeloctaux.com">Website</a>
+            
+          
+        </nav>
+        
+        
+        
+      </footer>
+      
+
+    </main>
+    
+    
+
+    <script type="text/javascript" src="https://blog.x4m3.rocks/elasticlunr.min.js"></script>
+    <script type="text/javascript" src="https://blog.x4m3.rocks/search.js"></script>
+  </body>
+</html>
+
