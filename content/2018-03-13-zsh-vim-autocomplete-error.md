@@ -1,6 +1,7 @@
 +++
 title = "error on zsh when using vim and autocomplete"
-date = 2018-03-13
+date = 2018-03-13T00:00:00-00[UTC]
+uuid = "16967917-f5db-4cad-933f-430436c5c592"
 +++
 
 do you use __zsh__ and __ohmyzsh__ ?

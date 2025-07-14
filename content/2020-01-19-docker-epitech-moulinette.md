@@ -1,6 +1,7 @@
 +++
 title = "how to use the docker of the epitech moulinette"
-date = 2020-01-19
+date = 2020-01-19T00:00:00-00[UTC]
+uuid = "f26b5c26-f736-4650-85c0-4aed139abbe4"
 +++
 
 this guide will show you how to install docker, download the epitech moulinette container and learn how to use it for your projects.

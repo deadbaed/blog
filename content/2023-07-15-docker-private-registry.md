@@ -1,6 +1,7 @@
 +++
 title = "Setup a private Docker registry"
-date = 2023-07-15
+date = 2023-07-15T00:00:00-00[UTC]
+uuid = "46adb2c3-b5b6-41db-b4b9-2d498cb5d22f"
 +++
 
 My internal infrastructure is complete. I can now work on my projects, but at some point they need to go out to the world!
@@ -13,7 +14,7 @@ The perfect solution is a private Docker registry! But it will not be on the int
 
 That way, projects can be deployed in their final form whenever and wherever, while the source remaining private.
 
-# Get started locally
+## Get started locally
 
 To start, I will launch a test registry on my machine to make sure everything works.
 
@@ -66,14 +67,14 @@ services:
 
 But don't start the services right away.
 
-# Authentication
+## Authentication
 
 I don't want the registry being open to everyone though, let's add some authentication.
 
 To keep things simple, I will use HTTP basic auth. If you want, there's a possibility to have a more [complex setup](https://docs.docker.com/registry/spec/auth/).
 
 Here's a quick script to get passwords in a format that Docker will accept:
-```sh
+```shell
 #!/bin/sh
 #
 # new-password.sh
@@ -89,7 +90,7 @@ htpasswd -nB $1
 ```
 
 How to use it:
-```sh
+```shell
 $ ./new-password.sh phil
 creating password for user "phil"
 New password: phil
@@ -103,10 +104,10 @@ Repeat the process for every user you want to give authentication to your regist
 
 Keep in mind I only cover **AUTHENTICATION** (who can access the registry), and not **AUTHORIZATION** (who can do what on the registry). With this setup, if you have access to the registry, you can do anything on it.
 
-# Use the registry
+## Use the registry
 
 Start the services with
-```sh
+```shell
 docker compose up
 ```
 
@@ -121,12 +122,12 @@ in a web browser and sign-in with your credentials. You should see an empty list
 Pick an image you want on the registry.
 
 If it's an existing image:
-```sh
+```shell
 docker tag name-of-existing-image localhost:5000/existing-image-name
 ```
 
 If you build the image directly:
-```sh
+```shell
 docker build -t localhost:5000/new-image-name
 ```
 
@@ -135,7 +136,7 @@ The name of the image must have the domain of the registry, in our case it's `lo
 ## Login to registry
 
 To sign in to the registry, use
-```sh
+```shell
 docker login localhost:5000
 ```
 and enter your credentials.
@@ -144,14 +145,14 @@ and enter your credentials.
 
 Simply run the usual docker command to push or pull images. Docker will know which registry to use based of the image's name.
 
-```sh
+```shell
 docker push localhost:5000/new-image-name
 docker pull localhost:5000/existing-image-name
 ```
 
 That's pretty much it!
 
-# Deploy to production
+## Deploy to production
 
 I use [Caprover](https://caprover.com) to deploy my docker images easily, it comes with a reverse proxy and automatic TLS certificates with Let's encrypt.
 

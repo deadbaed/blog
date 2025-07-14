@@ -1,16 +1,17 @@
 +++
 title = "Setup Caddy with a CA and ACME server on Alpine Linux"
-date = 2023-06-28
+date = 2023-06-28T00:00:00-00[UTC]
+uuid = "4a99e6df-dd18-42a0-adc7-6a9a60a3d747"
 +++
 
 Now that we have a WireGuard VPN with an awesome internal DNS server, let's get a web server with HTTPS!
 
-# Caddy
+## Caddy
 
 ## Install
 
 You will need to enable the `community` repo first.
-```sh
+```shell
 doas apk add caddy
 ```
 
@@ -22,7 +23,7 @@ Create a folder to serve stuff from, I placed it in
 ```
 
 Create the config in
-```sh
+```shell
 /etc/caddy/Caddyfile
 ```
 
@@ -47,7 +48,7 @@ Caddy already has a service!
 - Stop: `rc-service caddy stop`
 - Reload configuration without downtime: `rc-service caddy reload`
 
-# Generate keys and certificates
+## Generate keys and certificates
 
 We will generate the Root CA, the Intermediate CA.
 
@@ -147,7 +148,7 @@ keyUsage = critical, digitalSignature, cRLSign, keyCertSign
 ```
 
 After, run
-```sh
+```shell
 mkdir newcerts
 touch index.txt
 echo 1420 > serial
@@ -158,13 +159,13 @@ We are now ready to generate keys and certificates.
 ## Root key and certificate
 
 Generate key:
-```sh
+```shell
 openssl genrsa -aes256 -out root_ca_key 4096
 ```
 It will ask for a passphrase, I generated mine with my KeePassXC.
 
 Generate root certificate:
-```sh
+```shell
 openssl req -config config.conf -key root_ca_key -days 3650 -new -x509 -sha256 -extensions v3_ca -out root_ca.crt
 ```
 
@@ -184,13 +185,13 @@ I saved the `root_ca_key` and `root_ca.crt` inside my KeePassXC.
 ## Intermediate key and certificate
 
 Generate key:
-```sh
+```shell
 openssl genrsa -aes256 -out intermediate_ca_key 4096
 ```
 It will ask for a passphrase, I generated mine with my KeePassXC.
 
 Generate certificate request:
-```sh
+```shell
 openssl req -config config.conf -new -sha256 -key intermediate_ca_key -out intermediate_ca.csr.pem
 ```
 
@@ -204,7 +205,7 @@ Organization Name []:philt3r
 ```
 
 Sign certificate request with Root key:
-```sh
+```shell
 openssl ca -config config.conf -keyfile root_ca_key -cert root_ca.crt -extensions v3_intermediate_ca -days 1825 -notext -md sha256 -in intermediate_ca.csr.pem -out intermediate_ca.crt
 ```
 My Intermediate certificate will last for 1825 days (5 years).
@@ -216,7 +217,7 @@ Save these files, I saved them in my KeePassXC:
 
 Once everything is saved and backed up, delete everything from your computer securely.
 
-# CA and ACME server
+## CA and ACME server
 
 I discovered [Smallstep](https://smallstep.com/), which allows to become your own ACME server.
 
@@ -225,19 +226,19 @@ I discovered [Smallstep](https://smallstep.com/), which allows to become your ow
 They provide packages for Alpine!
 
 Install the packages with
-```sh
+```shell
 apk add step-cli step-certificates
 ```
 
 ## Configuration
 
 Start by creating the folder where `step` will save all the configs:
-```sh
+```shell
 mkdir /etc/step-ca -p
 ```
 
 Let's configure `step-ca`!
-```sh
+```shell
 STEPPATH=/etc/step-ca step ca init --name="philt3r" --acme --address="10.131.111.1:444" --provisioner="philt3r" --deployment-type standalone
 ```
 
@@ -260,7 +261,7 @@ Copy `intermediate_ca_key` in `/etc/step-ca/secrets` folder. I use the key direc
 ## Start the CA/ACME server
 
 Run
-```sh
+```shell
 step-ca /etc/step-ca/config/ca.json
 ```
 to start the server. It will ask your password to decrypt the `intermediate_ca_key`. Provide the password.
@@ -278,12 +279,12 @@ Create a file at
 and place the password inside that file.
 
 `step` should run as the user `step-ca`, so update the permissions on the config folder:
-```sh
+```shell
 chown step-ca:step-ca -Rv /etc/step-ca/
 ```
 
 To verify that everything worked, run:
-```sh
+```shell
 step-ca /etc/step-ca/config/ca.json --password-file=/etc/step-ca/password.txt
 ```
 
@@ -316,7 +317,7 @@ intra.philt3r intra.philt3r:80 {
 ```
 
 Make sure `step-ca` is started, and restart Caddy to make sure everything is good:
-```sh
+```shell
 rc-service caddy restart
 ```
 
@@ -334,17 +335,17 @@ On every device you want to trust your certificates, you will need to download t
 - Firefox: Install the certificate on your system and [tell firefox to trust it](https://support.mozilla.org/en-US/kb/setting-certificate-authorities-firefox)
 - Linux distros: [Ubuntu](https://ubuntu.com/server/docs/security-trust-store), [Fedora](https://docs.fedoraproject.org/en-US/quick-docs/using-shared-system-certificates)
 
-# Start on boot
+## Start on boot
 
 Start `caddy` and `step-ca` on startup with:
-```sh
+```shell
 rc-update add step-ca
 rc-update add caddy
 ```
 
 Reboot to make sure everything works.
 
-# Resources
+## Resources
 
 - [https://wiki.alpinelinux.org/wiki/Repositories](https://wiki.alpinelinux.org/wiki/Repositories)
 - Awesome guide that helped me a lot: [https://www.apalrd.net/posts/2023/network_acme/](https://www.apalrd.net/posts/2023/network_acme/)

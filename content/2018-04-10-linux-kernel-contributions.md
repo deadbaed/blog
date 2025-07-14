@@ -1,6 +1,7 @@
 +++
 title = "my contributions to the linux kernel"
-date = 2018-04-10
+date = 2018-04-10T00:00:00-00[UTC]
+uuid = "25dc7196-b043-4dbf-b26c-19c86b1dce26"
 +++
 
 you read it right! i am a contributor to the linux kernel!

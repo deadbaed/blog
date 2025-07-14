@@ -1,6 +1,7 @@
 +++
 title = "First setup of Archivebox"
-date = 2024-03-02
+date = 2024-03-02T00:00:00-00[UTC]
+uuid = "cf6e9f50-9f35-475a-9b06-3a2c9fb7bef0"
 +++
 
 I discovered [Archivebox](https://archivebox.io) and decided to install it on my server using containers.

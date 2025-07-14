@@ -1,6 +1,7 @@
 +++
 title = "how to put a custom boot logo on a thinkpad"
-date = 2019-02-24
+date = 2019-02-24T00:00:00-00[UTC]
+uuid = "abfe3758-2c22-49d3-921e-ead9265a7ed1"
 +++
 
 ## disclaimer
@@ -13,7 +14,7 @@ you have a thinkpad. it's beautiful, it's fast, it's perfect, it doesn't run win
 
 by default on new models, your boot logo look like this:
 
-![](default-logo.jpg)
+![default boot logo on new lenovo models](default-logo.jpg)
 
 to get a custom boot logo, you need:
 
@@ -58,7 +59,9 @@ where **X** is your drive letter that you know thanks to `lsblk`.
 
 if you want, i already have this selection of images ready to be used, or you can make your own!
 
-{{ gallery(path="/boot-logo/") }}
+Here is a [folder with images ready to be used](boot-logo/)
+
+<ImageGrid src="boot-logo/" />
 
 you can see the requirements, go in your usb drive, open the **readme.txt** in the *flash* folder.
 
@@ -74,7 +77,7 @@ now that the flash utility has booted, choose the second option, and follow the 
 
 the computer will reboot, flash the update, and when it will reboot, you should get your custom boot logo!
 
-![](custom-logo.jpg)
+![a thinkpad booting with a custom boot logo](custom-logo.jpg)
 
 if you want to go back to the default logo, simply reflash the bios update, when when asked if you want to use your custom logo, say no, and the default logo will be put back.
 

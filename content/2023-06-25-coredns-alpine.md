@@ -1,21 +1,22 @@
 +++
 title = "Setup CoreDNS on Alpine Linux"
-date = 2023-06-25
+date = 2023-06-25T00:00:00-00[UTC]
+uuid = "67f859a8-6047-4a0b-8ba3-b7aa6a979af7"
 +++
 
 Now that we have a WireGuard VPN, let's add a DNS server, to type letters instead of numbers!
 
-# Install CoreDNS
+## Install CoreDNS
 
 You will need to enable the `community` repo first.
-```sh
+```shell
 doas apk add coredns
 ```
 
-# Configuration
+## Configuration
 
 Create the config in
-```sh
+```shell
 /etc/coredns/Corefile
 ```
 
@@ -53,7 +54,7 @@ philt3r {
 
 My DNS service of choice comes from [free.fr](https://free.fr). Feel free to put your own favorite DNS service!
 
-# Script to launch on server startup
+## Script to launch on server startup
 
 CoreDNS already has a service!
 
@@ -66,7 +67,7 @@ The logs of CoreDNS should be available at
 /var/log/coredns/coredns.log
 ```
 
-# Use CoreDNS on the system
+## Use CoreDNS on the system
 
 Now that we have our DNS server, let's use it on our server!
 

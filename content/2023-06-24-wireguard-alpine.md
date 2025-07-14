@@ -1,30 +1,31 @@
 +++
 title = "Setup WireGuard server on Alpine Linux"
-date = 2023-06-24
+date = 2023-06-24T00:00:00-00[UTC]
+uuid = "d355c821-9f4b-48a0-8051-7f13161656e3"
 +++
 
 Let's do this baremetal, no Docker!
 
 I will do this inside a [Proxmox](https://www.proxmox.com/en/) virtual machine.
 
-# Get started
+## Get started
 
 Start by installing [Alpine Linux](https://www.alpinelinux.org/): Run the installer, next, next, next, and boot the os once it's done.
 
-# Setup ssh
+## Setup ssh
 
 Copy ssh key (run this on your local machine):
-```sh
+```shell
 ssh-copy-id -i ~/.ssh/id_rsa.pub user@ip
 ```
 
 Login via ssh, and install your favorite editor:
-```sh
+```shell
 doas apk add vim
 ```
 
 Edit ssh config to force ssh key use:
-```sh
+```shell
 doas vim /etc/ssh/sshd_config
 ```
 
@@ -35,35 +36,35 @@ PubkeyAuthentication yes
 ```
 
 Restart ssh service, logout, and log back in
-```sh
+```shell
 doas rc-service sshd restart
 ```
 
-# Setup alpine package manager
+## Setup alpine package manager
 
 I use `mirrors.ircam.fr` as my mirror
 
 Open 
-```sh
+```shell
 /etc/apk/repositories
 ```
 
 add the community repo, and run updates:
-```sh
+```shell
 doas apk -U upgrade
 ```
 
-# WireGuard basics
+## WireGuard basics
 
 Install WireGuard:
-```sh
+```shell
 doas apk add wireguard-tools
 ```
 
 ## Kernel module
 
 Load the module
-```sh
+```shell
 doas modprobe wireguard
 ```
 
@@ -87,18 +88,18 @@ Edit
 ```
 
 and add
-```sh
+```shell
 net.ipv4.ip_forward = 1
 ```
 at the bottom of the file, and save
 
 Launch sysctl on startup with
-```sh
+```shell
 doas rc-update add sysctl
 ```
 and reboot.
 
-# IP Addresses
+## IP Addresses
 
 Pick a range if ip addresses to use: [RFC 1918](https://datatracker.ietf.org/doc/html/rfc1918)
 
@@ -120,24 +121,24 @@ WireGuard:
 - Start: `10.131.111.0/24`
 - End: `10.131.111.255/24`
 
-# Generate keys for WireGuard
+## Generate keys for WireGuard
 
 Do everything as root (doas is the equivalent of sudo):
-```sh
+```shell
 doas su
 ```
 
 Move to the wireguard configuration, I'll store everything there for easy access:
-```sh
+```shell
 cd /etc/wireguard/
 ```
 
 Generate the private and public key, store them in files (we'll use them later):
-```sh
+```shell
 wg genkey | tee philt3r-privatekey | wg pubkey > philt3r-publickey
 ```
 
-# Configure server interface
+## Configure server interface
 
 All the server configuration will happen in
 ```
@@ -165,15 +166,15 @@ PostDown = iptables -D FORWARD -o %i -j ACCEPT;
 ```
 
 Once it's good, make sure only root can read and write to the files:
-```sh
+```shell
 chmod 600 /etc/wireguard/*
 ```
 
-# Add new peer
+## Add new peer
 
 You will need to repeat this for each new peer
 
-```sh
+```shell
 cd /etc/wireguard/
 ```
 
@@ -184,17 +185,17 @@ Starting now, `name` is a placeholder for the name of the peer.
 I typically use the format **name-of-person** followed by **device-name**. For example, the peer for my phone will be **phil-iphone**.
 
 Create folder to store keys for the peer:
-```sh
+```shell
 mkdir -p peers/name
 ```
 
 Generate preshared key (not required):
-```sh
+```shell
 wg genpsk | tee peers/name/preshared.psk
 ```
 
 Generate private and public keys for the peer:
-```sh
+```shell
 wg genkey | tee peers/name/private.key | wg pubkey > peers/name/public.key
 ```
 
@@ -246,12 +247,12 @@ Either give the configuration file we just created, or you can have multiple cho
 ### QR Code
 
 Start by installing
-```sh
+```shell
 apk add libqrencode-tools
 ```
 
 And run 
-```sh
+```shell
 qrencode -t ansiutf8 < peers/name/philt3r-name.wg.conf
 ```
 
@@ -260,12 +261,12 @@ qrencode -t ansiutf8 < peers/name/philt3r-name.wg.conf
 Note: I'm using `base64` on Alpine, which comes from BusyBox, the CLI may be different depending on the operating system you're using.
 
 Encode the configuration file to a base64 string:
-```sh
+```shell
 cat philt3r-name.wg.conf | base64 -w 0
 ```
 
 And on the other device, decode the string and save to a file:
-```sh
+```shell
 base64 -d > philt3r-name.wg.conf
 ```
 Put the base64 encoded string, and send a EOF (usually `ctrl + d`).
@@ -278,19 +279,19 @@ rc-service wg restart
 ```
 to restart the server with your new peer.
 
-# Start WireGuard manually
+## Start WireGuard manually
 
 Make sure to open the port on your router in **UDP** mode! I spent a lot of time debugging to realize that my port was in TCP, double check!
 
 Make sure to be root before, don't use `doas` or `sudo`!
-```sh
+```shell
 wg-quick up wg0
 ```
 
 On the peer, start the tunnel.
 
 On the server, run
-```sh
+```shell
 wg
 ```
 to check the status of WireGuard. You should see the peer and some stats it is connected.
@@ -311,13 +312,13 @@ You may not be able to go on the internet, or even make DNS requests, it's norma
 
 We are just testing if the tunnel works. You can stop the tunnel.
 
-# Stop WireGuard manually
+## Stop WireGuard manually
 
-```sh
+```shell
 wg-quick down wg0
 ```
 
-# Script to launch on server startup
+## Script to launch on server startup
 
 To start WireGuard on startup, we will write an OpenRC script. It will be located in
 ```
@@ -325,7 +326,7 @@ To start WireGuard on startup, we will write an OpenRC script. It will be locate
 ```
 
 Put the following:
-```sh
+```shell
 #!/sbin/openrc-run
 #
 
@@ -354,7 +355,7 @@ status() {
 ```
 
 Give it executable access
-```sh
+```shell
 chmod +x /etc/init.d/wg
 ```
 
@@ -372,7 +373,7 @@ chmod +x /etc/init.d/wg
 
 Reboot and make sure everything works, you should see WireGuard logs when your server is starting.
 
-# Resources
+## Resources
 
 These resources helped me when setting up my WireGuard server. Thanks!
 

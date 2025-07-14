@@ -1,6 +1,7 @@
 +++
 title = "Automount a Hetzner Storage Box with sshfs on NixOS"
-date = 2024-08-10
+date = 2024-08-10T00:00:00-00[UTC]
+uuid = "2ecdf84f-6a1a-4131-91c2-eb764bb295a0"
 +++
 
 I had my eyes on some nice arm64 servers from Hetzner, and I finally pulled the trigger, I got the `CAX21`.
@@ -10,7 +11,7 @@ By having a couple of configuration files, it will be easier to review, edit and
 
 But time will tell if it is the good decision, and not sticking to a imperative distribution such as Debian.
 
-# Not a lot of storage
+## Not a lot of storage
 
 The only downside with these servers is the storage -- I only have 80 gigabytes of storage on mine.
 Fortunately, Hetzner has their **Storage Box** offerings, I picked up a `BX11` which has 1 terabyte of storage!
@@ -18,7 +19,7 @@ Fortunately, Hetzner has their **Storage Box** offerings, I picked up a `BX11` w
 The plan is to mount the storage box as a regular drive and have applications use it normally.
 The main applications will be documents, media, backups -- not speed critical data such as databases or logs.
 
-# Storage Box ordering and setup
+## Storage Box ordering and setup
 
 Start by ordering your Storage Box, I think mine took less than an hour to be provisioned and delivered to me.
 
@@ -27,7 +28,7 @@ If you will use the storage box outside of the Hetzner network, enable `External
 
 Finally, you cannot set the password yourself, you will have to reset it.
 
-# SSH keys
+## SSH keys
 
 On the server, generate a new ssh key with `ssh-keygen` which will be used to connect to the storage box.
 
@@ -40,7 +41,7 @@ ssh-copy-id -p 23 -s user@storagebox.example.org
 
 More documentation on ssh keys with storage box: <https://docs.hetzner.com/robot/storage-box/backup-space-ssh-keys>
 
-# NixOS configuration
+## NixOS configuration
 
 The easy part, and the reason why I think I will like to use NixOS on my server:
 

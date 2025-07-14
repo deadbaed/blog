@@ -1,6 +1,7 @@
 +++
 title = "openbsd first setup after install"
-date = 2019-03-01
+date = 2019-03-01T00:00:00-00[UTC]
+uuid = "c272a4b3-5e64-4480-a408-a13245f37a0c"
 +++
 
 just installed openbsd on my chromebook, seems to be working fine!

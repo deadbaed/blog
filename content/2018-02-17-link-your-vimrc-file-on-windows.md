@@ -1,6 +1,7 @@
 +++
 title = "how to link your vimrc file on windows"
-date = 2018-02-17
+date = 2018-02-17T00:00:00-00[UTC]
+uuid = "a5bdecbc-719e-472e-8085-98a0ba7154af"
 +++
 
 i code on my linux machine, and i use vim as my text editor.  

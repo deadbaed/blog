@@ -1,6 +1,7 @@
 +++
 title = "Dynamic MOTD on Alpine Linux"
-date = 2023-06-30
+date = 2023-06-30T00:00:00-00[UTC]
+uuid = "b8116cd7-eb1d-4429-8256-eaa546422fc0"
 +++
 
 When we sign in to our server, the message of the day (MOTD) is pretty lame. Let's get something better!
@@ -44,7 +45,7 @@ And here's my new MOTD. I even show the WireGuard ip address:
 ```
 
 Start and enable cron at startup (it should be installed by default):
-```sh
+```shell
 rc-service crond start
 rc-update add crond
 ```
@@ -55,7 +56,7 @@ Let's run a script every 15 minutes to update the `/etc/motd` file:
 ```
 
 Here's the content of my MOTD:
-```sh
+```shell
 #!/bin/sh
 #. /etc/os-release
 PRETTY_NAME=`awk -F= '$1=="PRETTY_NAME" { print $2 ;}' /etc/os-release | tr -d '"'`
@@ -88,19 +89,19 @@ EOF
 ```
 
 Make the script executable, and check if it's good:
-```sh
+```shell
 chmod a+x /etc/periodic/15min/motd
 run-parts --test /etc/periodic/15min
 ```
 
 If you're lazy and don't want to wait 15 minutes, run the script directly:
-```sh
+```shell
 /etc/periodic/15min/motd
 ```
 
 Log out and log back in, you should see the new MOTD!
 
-# Resources
+## Resources
 
 [https://kingtam.win/archives/apline-custom.html](https://kingtam.win/archives/apline-custom.html)
 
