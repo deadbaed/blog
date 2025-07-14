@@ -4,5 +4,4 @@ my blog
 
 ## tech
 
-- [zola](https://www.getzola.org)
-- theme is [lightspeed](https://github.com/carpetscheme/lightspeed) with some edits
+- [leptos_ssg](https://github.com/deadbaed/leptos_ssg)

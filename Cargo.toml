@@ -1,0 +1,13 @@
+[package]
+name = "blog"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+leptos_ssg = { git = "https://github.com/deadbaed/leptos_ssg" }
+leptos = "0.8"
+
+# When debugging `leptos_ssg`
+# [patch."https://github.com/deadbaed/leptos_ssg"]
+# leptos_ssg = { path = "../leptos_ssg/" }
