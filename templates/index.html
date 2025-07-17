@@ -70,6 +70,16 @@
 
       {% block content %}
       <ul class="homepage-list">
+
+        <div class="moving">
+            deadbaed is moving!
+            Find it at <a href="https://philippeloctaux.com/blog/">https://philippeloctaux.com/blog/</a>
+            <div class="archived">
+                This site is archived and will not be updated.<br />
+                If you are subscribed to the RSS feed, please update your reader to the new URL.
+            </div>
+        </div>
+
         {% for post in section.pages %}
           {{ macros::post_in_list(post=post) }}
         {% endfor %}
