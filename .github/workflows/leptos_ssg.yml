@@ -23,7 +23,47 @@ jobs:
       - uses: cachix/install-nix-action@v31
         with:
           nix_path: nixpkgs=channel:nixos-unstable
-      - run: nix-shell -p tailwindcss_4 --run 'tailwindcss --cwd ./leptos_ssg --minify' > target/blog/www/style.css
+      - run: nix-shell -p tailwindcss_4 --run 'tailwindcss --cwd ./leptos_ssg/src --minify' > target/blog/www/style.css
 
-      # list files to deploy
-      - run: tree target/blog
+      # create archive of new deployment
+      - run: echo $GITHUB_SHA > target/blog/deployment.txt
+      - run: tar -acvf blog.tar.zst -C target blog/
+
+      # prepare ssh connections
+      - name: Prepare SSH connections
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          echo "${{ secrets.SSH_KNOWN_HOST }}" > ~/.ssh/known_hosts
+
+      # deploy archive
+      - name: Send deployment to server
+        run: scp -C blog.tar.zst ${{ secrets.SSH_DESTINATION }}:/tmp
+      - name: Deploy
+        run: |
+          ssh ${{ secrets.SSH_DESTINATION }} << 'EOF'
+          # create temp folder
+          tmp=$(mktemp -d) && \
+
+          # extract new deployment
+          pushd $tmp && \
+          mv /tmp/blog.tar.zst . && \
+          tar -xf blog.tar.zst && \
+          echo "Extracted archive" && \
+          mv blog /var/www/blog/new-deployment && \
+
+          # backup current deployment, install new deployment
+          pushd /var/www/blog && \
+          current_deployment=blog-$(date -I)-$(cat ./current/deployment.txt).tar.zst && \
+          tar -acf $current_deployment current/ --transform='s|current/|blog/|' && \
+          echo "Current deployment is backed up as $current_deployment" && \
+          exch new-deployment/ current/ && \
+          echo "New deployment is live" && \
+
+          # cleanup
+          rm -rf new-deployment/ && \
+          echo "Removed old deployment" && \
+          rm -rf $tmp && \
+          echo "Removed $tmp"
+          EOF
