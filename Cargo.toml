@@ -5,7 +5,7 @@ edition = "2024"
 publish = false
 
 [dependencies]
-leptos_ssg = { git = "https://github.com/deadbaed/leptos_ssg" }
+leptos_ssg = { git = "https://github.com/deadbaed/leptos_ssg", features = ["minify"] }
 leptos = "0.8"
 
 # When debugging `leptos_ssg`
