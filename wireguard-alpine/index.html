@@ -15,7 +15,7 @@
 
     <link rel="alternate" type="application/atom+xml" title="RSS" href="https://blog.x4m3.rocks/atom.xml">
 
-    <style>html,body{background:#fffaf7;color:#2d2d2d;font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol"}a,a:visited{color:darkred;text-decoration:none}a:hover{text-decoration:underline}main{margin:auto;max-width:38rem;padding:.8rem}pre{background:#fff;overflow:scroll;padding:1rem}td{border:1px solid #2d2d2d;padding:10px}img{height:auto;max-width:100%}.homepage-list{list-style:none;padding:1rem 0}.homepage-list li{align-items:center;display:flex;flex-wrap:wrap;justify-content:space-between;margin-bottom:10px}@media (max-width: 38rem){.homepage-list li a{width:100%}}</style>
+    <style>html,body{background:#fffaf7;color:#2d2d2d;font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol"}a,a:visited{color:darkred;text-decoration:none}a:hover{text-decoration:underline}main{margin:auto;max-width:38rem;padding:.8rem}pre{background:#fff;overflow:scroll;padding:1rem}td{border:1px solid #2d2d2d;padding:10px}img{height:auto;max-width:100%}.homepage-list{list-style:none;padding:1rem 0}.homepage-list li{align-items:center;display:flex;flex-wrap:wrap;justify-content:space-between;margin-bottom:10px}@media (max-width: 38rem){.homepage-list li a{width:100%}}.moving{background:#4ecdc4;padding:2em;margin-top:2em;margin-bottom:2em;font-size:24px;word-wrap:break-word}.archived{margin-top:2em;font-size:16px}</style>
 
     <meta property="og:site_name" content="deadbaed">
       
@@ -54,6 +54,17 @@
       
 
       
+
+        <div class="moving">
+            deadbead is moving!
+            Find this article at the new location: <a href="https://philippeloctaux.com/blog/wireguard-alpine/">https://philippeloctaux.com/blog/wireguard-alpine/</a>
+
+            <div class="archived">
+                This site is archived and will not be updated.<br />
+                If you are subscribed to the RSS feed, please update your reader to the new URL.
+            </div>
+        </div>
+
 <article>
   <h1>Setup WireGuard server on Alpine Linux</h1>
 
@@ -84,7 +95,7 @@
 </span></code></pre>
 <h1 id="setup-alpine-package-manager">Setup alpine package manager</h1>
 <p>I use <code>mirrors.ircam.fr</code> as my mirror</p>
-<p>Open </p>
+<p>Open</p>
 <pre data-lang="sh" style="background-color:#fcf0ca;color:#282828aa;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#282828;">/etc/apk/repositories
 </span></code></pre>
 <p>add the community repo, and run updates:</p>
@@ -223,7 +234,7 @@
 <p>Start by installing</p>
 <pre data-lang="sh" style="background-color:#fcf0ca;color:#282828aa;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#282828;">apk add libqrencode-tools
 </span></code></pre>
-<p>And run </p>
+<p>And run</p>
 <pre data-lang="sh" style="background-color:#fcf0ca;color:#282828aa;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#282828;">qrencode -t ansiutf8 </span><span style="color:#b23c15;">&lt;</span><span style="color:#282828;"> peers/name/philt3r-name.wg.conf
 </span></code></pre>
 <h3 id="base64">Base64</h3>

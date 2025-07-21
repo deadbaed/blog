@@ -2,8 +2,8 @@
 <feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
     <title>deadbaed</title>
     <subtitle>broke my bed now it&#x27;s dead</subtitle>
-    <link href="https://blog.x4m3.rocks/atom.xml" rel="self" type="application/atom+xml"/>
-    <link href="https://blog.x4m3.rocks"/>
+    <link rel="self" type="application/atom+xml" href="https://blog.x4m3.rocks/atom.xml"/>
+    <link rel="alternate" type="text/html" href="https://blog.x4m3.rocks"/>
     <generator uri="https://www.getzola.org/">Zola</generator>
     <updated>2024-08-10T00:00:00+00:00</updated>
     <id>https://blog.x4m3.rocks/atom.xml</id>
@@ -11,13 +11,19 @@
         <title>Automount a Hetzner Storage Box with sshfs on NixOS</title>
         <published>2024-08-10T00:00:00+00:00</published>
         <updated>2024-08-10T00:00:00+00:00</updated>
+        
         <author>
-          <name>Unknown</name>
+          <name>
+            
+              Unknown
+            
+          </name>
         </author>
-        <link rel="alternate" href="https://blog.x4m3.rocks/hetzner-storagebox-nixos-sshfs-fstab/" type="text/html"/>
+        
+        <link rel="alternate" type="text/html" href="https://blog.x4m3.rocks/hetzner-storagebox-nixos-sshfs-fstab/"/>
         <id>https://blog.x4m3.rocks/hetzner-storagebox-nixos-sshfs-fstab/</id>
         
-        <content type="html">&lt;p&gt;I had my eyes on some nice arm64 servers from Hetzner, and I finally pulled the trigger, I got the &lt;code&gt;CAX21&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+        <content type="html" xml:base="https://blog.x4m3.rocks/hetzner-storagebox-nixos-sshfs-fstab/">&lt;p&gt;I had my eyes on some nice arm64 servers from Hetzner, and I finally pulled the trigger, I got the &lt;code&gt;CAX21&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
 &lt;p&gt;It is also the opportunity to reduce time of maintaining my infrastructure, I will use NixOS to setup my server.
 By having a couple of configuration files, it will be easier to review, edit and update the system.&lt;&#x2F;p&gt;
 &lt;p&gt;But time will tell if it is the good decision, and not sticking to a imperative distribution such as Debian.&lt;&#x2F;p&gt;
@@ -71,13 +77,19 @@ If you will use the storage box outside of the Hetzner network, enable &lt;code&
         <title>First setup of Archivebox</title>
         <published>2024-03-02T00:00:00+00:00</published>
         <updated>2024-03-02T00:00:00+00:00</updated>
+        
         <author>
-          <name>Unknown</name>
+          <name>
+            
+              Unknown
+            
+          </name>
         </author>
-        <link rel="alternate" href="https://blog.x4m3.rocks/archivebox-setup/" type="text/html"/>
+        
+        <link rel="alternate" type="text/html" href="https://blog.x4m3.rocks/archivebox-setup/"/>
         <id>https://blog.x4m3.rocks/archivebox-setup/</id>
         
-        <content type="html">&lt;p&gt;I discovered &lt;a href=&quot;https:&#x2F;&#x2F;archivebox.io&quot;&gt;Archivebox&lt;&#x2F;a&gt; and decided to install it on my server using containers.&lt;&#x2F;p&gt;
+        <content type="html" xml:base="https://blog.x4m3.rocks/archivebox-setup/">&lt;p&gt;I discovered &lt;a href=&quot;https:&#x2F;&#x2F;archivebox.io&quot;&gt;Archivebox&lt;&#x2F;a&gt; and decided to install it on my server using containers.&lt;&#x2F;p&gt;
 &lt;p&gt;I just had to make a couple of adjustements, because all the content on the instance is publically available. I do not want that, I want to restrict access with user accounts.&lt;&#x2F;p&gt;
 &lt;p&gt;To do so, start by finding out the container name, and open a shell:&lt;&#x2F;p&gt;
 &lt;pre data-lang=&quot;shell&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-shell &quot;&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;&lt;span&gt;docker exec --user=archivebox -it container-name-goes-here bash
@@ -101,13 +113,19 @@ If you will use the storage box outside of the Hetzner network, enable &lt;code&
         <title>Setup a private Docker registry</title>
         <published>2023-07-15T00:00:00+00:00</published>
         <updated>2023-07-15T00:00:00+00:00</updated>
+        
         <author>
-          <name>Unknown</name>
+          <name>
+            
+              Unknown
+            
+          </name>
         </author>
-        <link rel="alternate" href="https://blog.x4m3.rocks/docker-private-registry/" type="text/html"/>
+        
+        <link rel="alternate" type="text/html" href="https://blog.x4m3.rocks/docker-private-registry/"/>
         <id>https://blog.x4m3.rocks/docker-private-registry/</id>
         
-        <content type="html">&lt;p&gt;My internal infrastructure is complete. I can now work on my projects, but at some point they need to go out to the world!&lt;&#x2F;p&gt;
+        <content type="html" xml:base="https://blog.x4m3.rocks/docker-private-registry/">&lt;p&gt;My internal infrastructure is complete. I can now work on my projects, but at some point they need to go out to the world!&lt;&#x2F;p&gt;
 &lt;p&gt;The platform for most of my projects is the web, and the best tool I found so far to deploy them is Docker.&lt;&#x2F;p&gt;
 &lt;p&gt;I want to keep the code on the private infrastructure, but I also want to be in control of where the docker images will be stored.&lt;&#x2F;p&gt;
 &lt;p&gt;The perfect solution is a private Docker registry! But it will not be on the internal infrastructure, it will be publicly available on a regular server.&lt;&#x2F;p&gt;
@@ -283,13 +301,19 @@ If you will use the storage box outside of the Hetzner network, enable &lt;code&
         <title>Setup a service on our internal infrastructure on Alpine Linux</title>
         <published>2023-07-02T00:00:00+00:00</published>
         <updated>2023-07-02T00:00:00+00:00</updated>
+        
         <author>
-          <name>Unknown</name>
+          <name>
+            
+              Unknown
+            
+          </name>
         </author>
-        <link rel="alternate" href="https://blog.x4m3.rocks/service-internal-infra-alpine/" type="text/html"/>
+        
+        <link rel="alternate" type="text/html" href="https://blog.x4m3.rocks/service-internal-infra-alpine/"/>
         <id>https://blog.x4m3.rocks/service-internal-infra-alpine/</id>
         
-        <content type="html">&lt;p&gt;Now we have a basic internal infrastructure with:&lt;&#x2F;p&gt;
+        <content type="html" xml:base="https://blog.x4m3.rocks/service-internal-infra-alpine/">&lt;p&gt;Now we have a basic internal infrastructure with:&lt;&#x2F;p&gt;
 &lt;ul&gt;
 &lt;li&gt;Everything hidden and encrypted through the network (WireGuard)&lt;&#x2F;li&gt;
 &lt;li&gt;Pretty internal domain names instead of raw ip addresses (CoreDNS)&lt;&#x2F;li&gt;
@@ -389,13 +413,19 @@ If you will use the storage box outside of the Hetzner network, enable &lt;code&
         <title>Dynamic MOTD on Alpine Linux</title>
         <published>2023-06-30T00:00:00+00:00</published>
         <updated>2023-06-30T00:00:00+00:00</updated>
+        
         <author>
-          <name>Unknown</name>
+          <name>
+            
+              Unknown
+            
+          </name>
         </author>
-        <link rel="alternate" href="https://blog.x4m3.rocks/dynamic-motd-alpine/" type="text/html"/>
+        
+        <link rel="alternate" type="text/html" href="https://blog.x4m3.rocks/dynamic-motd-alpine/"/>
         <id>https://blog.x4m3.rocks/dynamic-motd-alpine/</id>
         
-        <content type="html">&lt;p&gt;When we sign in to our server, the message of the day (MOTD) is pretty lame. Let&#x27;s get something better!&lt;&#x2F;p&gt;
+        <content type="html" xml:base="https://blog.x4m3.rocks/dynamic-motd-alpine/">&lt;p&gt;When we sign in to our server, the message of the day (MOTD) is pretty lame. Let&#x27;s get something better!&lt;&#x2F;p&gt;
 &lt;p&gt;This is the default MOTD of alpine:&lt;&#x2F;p&gt;
 &lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;Welcome to Alpine!
 &lt;&#x2F;span&gt;&lt;span&gt;
@@ -485,13 +515,19 @@ If you will use the storage box outside of the Hetzner network, enable &lt;code&
         <title>Setup Caddy with a CA and ACME server on Alpine Linux</title>
         <published>2023-06-28T00:00:00+00:00</published>
         <updated>2023-06-28T00:00:00+00:00</updated>
+        
         <author>
-          <name>Unknown</name>
+          <name>
+            
+              Unknown
+            
+          </name>
         </author>
-        <link rel="alternate" href="https://blog.x4m3.rocks/caddy-ca-acme-alpine/" type="text/html"/>
+        
+        <link rel="alternate" type="text/html" href="https://blog.x4m3.rocks/caddy-ca-acme-alpine/"/>
         <id>https://blog.x4m3.rocks/caddy-ca-acme-alpine/</id>
         
-        <content type="html">&lt;p&gt;Now that we have a WireGuard VPN with an awesome internal DNS server, let&#x27;s get a web server with HTTPS!&lt;&#x2F;p&gt;
+        <content type="html" xml:base="https://blog.x4m3.rocks/caddy-ca-acme-alpine/">&lt;p&gt;Now that we have a WireGuard VPN with an awesome internal DNS server, let&#x27;s get a web server with HTTPS!&lt;&#x2F;p&gt;
 &lt;h1 id=&quot;caddy&quot;&gt;Caddy&lt;&#x2F;h1&gt;
 &lt;h2 id=&quot;install&quot;&gt;Install&lt;&#x2F;h2&gt;
 &lt;p&gt;You will need to enable the &lt;code&gt;community&lt;&#x2F;code&gt; repo first.&lt;&#x2F;p&gt;
@@ -753,13 +789,19 @@ If you will use the storage box outside of the Hetzner network, enable &lt;code&
         <title>Setup CoreDNS on Alpine Linux</title>
         <published>2023-06-25T00:00:00+00:00</published>
         <updated>2023-06-25T00:00:00+00:00</updated>
+        
         <author>
-          <name>Unknown</name>
+          <name>
+            
+              Unknown
+            
+          </name>
         </author>
-        <link rel="alternate" href="https://blog.x4m3.rocks/coredns-alpine/" type="text/html"/>
+        
+        <link rel="alternate" type="text/html" href="https://blog.x4m3.rocks/coredns-alpine/"/>
         <id>https://blog.x4m3.rocks/coredns-alpine/</id>
         
-        <content type="html">&lt;p&gt;Now that we have a WireGuard VPN, let&#x27;s add a DNS server, to type letters instead of numbers!&lt;&#x2F;p&gt;
+        <content type="html" xml:base="https://blog.x4m3.rocks/coredns-alpine/">&lt;p&gt;Now that we have a WireGuard VPN, let&#x27;s add a DNS server, to type letters instead of numbers!&lt;&#x2F;p&gt;
 &lt;h1 id=&quot;install-coredns&quot;&gt;Install CoreDNS&lt;&#x2F;h1&gt;
 &lt;p&gt;You will need to enable the &lt;code&gt;community&lt;&#x2F;code&gt; repo first.&lt;&#x2F;p&gt;
 &lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;doas apk add coredns
@@ -833,13 +875,19 @@ If you will use the storage box outside of the Hetzner network, enable &lt;code&
         <title>Setup WireGuard server on Alpine Linux</title>
         <published>2023-06-24T00:00:00+00:00</published>
         <updated>2023-06-24T00:00:00+00:00</updated>
+        
         <author>
-          <name>Unknown</name>
+          <name>
+            
+              Unknown
+            
+          </name>
         </author>
-        <link rel="alternate" href="https://blog.x4m3.rocks/wireguard-alpine/" type="text/html"/>
+        
+        <link rel="alternate" type="text/html" href="https://blog.x4m3.rocks/wireguard-alpine/"/>
         <id>https://blog.x4m3.rocks/wireguard-alpine/</id>
         
-        <content type="html">&lt;p&gt;Let&#x27;s do this baremetal, no Docker!&lt;&#x2F;p&gt;
+        <content type="html" xml:base="https://blog.x4m3.rocks/wireguard-alpine/">&lt;p&gt;Let&#x27;s do this baremetal, no Docker!&lt;&#x2F;p&gt;
 &lt;p&gt;I will do this inside a &lt;a href=&quot;https:&#x2F;&#x2F;www.proxmox.com&#x2F;en&#x2F;&quot;&gt;Proxmox&lt;&#x2F;a&gt; virtual machine.&lt;&#x2F;p&gt;
 &lt;h1 id=&quot;get-started&quot;&gt;Get started&lt;&#x2F;h1&gt;
 &lt;p&gt;Start by installing &lt;a href=&quot;https:&#x2F;&#x2F;www.alpinelinux.org&#x2F;&quot;&gt;Alpine Linux&lt;&#x2F;a&gt;: Run the installer, next, next, next, and boot the os once it&#x27;s done.&lt;&#x2F;p&gt;
@@ -862,7 +910,7 @@ If you will use the storage box outside of the Hetzner network, enable &lt;code&
 &lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
 &lt;h1 id=&quot;setup-alpine-package-manager&quot;&gt;Setup alpine package manager&lt;&#x2F;h1&gt;
 &lt;p&gt;I use &lt;code&gt;mirrors.ircam.fr&lt;&#x2F;code&gt; as my mirror&lt;&#x2F;p&gt;
-&lt;p&gt;Open &lt;&#x2F;p&gt;
+&lt;p&gt;Open&lt;&#x2F;p&gt;
 &lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;&#x2F;etc&#x2F;apk&#x2F;repositories
 &lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
 &lt;p&gt;add the community repo, and run updates:&lt;&#x2F;p&gt;
@@ -1001,7 +1049,7 @@ If you will use the storage box outside of the Hetzner network, enable &lt;code&
 &lt;p&gt;Start by installing&lt;&#x2F;p&gt;
 &lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;apk add libqrencode-tools
 &lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
-&lt;p&gt;And run &lt;&#x2F;p&gt;
+&lt;p&gt;And run&lt;&#x2F;p&gt;
 &lt;pre data-lang=&quot;sh&quot; style=&quot;background-color:#fcf0ca;color:#282828aa;&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span style=&quot;color:#282828;&quot;&gt;qrencode -t ansiutf8 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b23c15;&quot;&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#282828;&quot;&gt; peers&#x2F;name&#x2F;philt3r-name.wg.conf
 &lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
 &lt;h3 id=&quot;base64&quot;&gt;Base64&lt;&#x2F;h3&gt;
@@ -1104,13 +1152,19 @@ If you will use the storage box outside of the Hetzner network, enable &lt;code&
         <title>how to use the docker of the epitech moulinette</title>
         <published>2020-01-19T00:00:00+00:00</published>
         <updated>2020-01-19T00:00:00+00:00</updated>
+        
         <author>
-          <name>Unknown</name>
+          <name>
+            
+              Unknown
+            
+          </name>
         </author>
-        <link rel="alternate" href="https://blog.x4m3.rocks/docker-epitech-moulinette/" type="text/html"/>
+        
+        <link rel="alternate" type="text/html" href="https://blog.x4m3.rocks/docker-epitech-moulinette/"/>
         <id>https://blog.x4m3.rocks/docker-epitech-moulinette/</id>
         
-        <content type="html">&lt;p&gt;this guide will show you how to install docker, download the epitech moulinette container and learn how to use it for your projects.&lt;&#x2F;p&gt;
+        <content type="html" xml:base="https://blog.x4m3.rocks/docker-epitech-moulinette/">&lt;p&gt;this guide will show you how to install docker, download the epitech moulinette container and learn how to use it for your projects.&lt;&#x2F;p&gt;
 &lt;h2 id=&quot;install&quot;&gt;install&lt;&#x2F;h2&gt;
 &lt;p&gt;ubuntu:&lt;&#x2F;p&gt;
 &lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;sudo apt install docker.io
@@ -1145,13 +1199,19 @@ If you will use the storage box outside of the Hetzner network, enable &lt;code&
         <title>archlinux how old is your installation</title>
         <published>2019-04-18T00:00:00+00:00</published>
         <updated>2019-04-18T00:00:00+00:00</updated>
+        
         <author>
-          <name>Unknown</name>
+          <name>
+            
+              Unknown
+            
+          </name>
         </author>
-        <link rel="alternate" href="https://blog.x4m3.rocks/archlinux-how-old-is-your-installation/" type="text/html"/>
+        
+        <link rel="alternate" type="text/html" href="https://blog.x4m3.rocks/archlinux-how-old-is-your-installation/"/>
         <id>https://blog.x4m3.rocks/archlinux-how-old-is-your-installation/</id>
         
-        <content type="html">&lt;p&gt;on archlinux, to see when you installed arch on your computer, run this command&lt;&#x2F;p&gt;
+        <content type="html" xml:base="https://blog.x4m3.rocks/archlinux-how-old-is-your-installation/">&lt;p&gt;on archlinux, to see when you installed arch on your computer, run this command&lt;&#x2F;p&gt;
 &lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;sed -n &amp;quot;&#x2F; installed $1&#x2F;{s&#x2F;].*&#x2F;]&#x2F;p;q}&amp;quot; &#x2F;var&#x2F;log&#x2F;pacman.log
 &lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
 &lt;p&gt;it will display the date and the time when you ran &lt;code&gt;pacstrap&lt;&#x2F;code&gt; on the live cd to install your system.&lt;&#x2F;p&gt;
@@ -1163,13 +1223,19 @@ If you will use the storage box outside of the Hetzner network, enable &lt;code&
         <title>openbsd first setup after install</title>
         <published>2019-03-01T00:00:00+00:00</published>
         <updated>2019-03-01T00:00:00+00:00</updated>
+        
         <author>
-          <name>Unknown</name>
+          <name>
+            
+              Unknown
+            
+          </name>
         </author>
-        <link rel="alternate" href="https://blog.x4m3.rocks/openbsd-setup/" type="text/html"/>
+        
+        <link rel="alternate" type="text/html" href="https://blog.x4m3.rocks/openbsd-setup/"/>
         <id>https://blog.x4m3.rocks/openbsd-setup/</id>
         
-        <content type="html">&lt;p&gt;just installed openbsd on my chromebook, seems to be working fine!&lt;&#x2F;p&gt;
+        <content type="html" xml:base="https://blog.x4m3.rocks/openbsd-setup/">&lt;p&gt;just installed openbsd on my chromebook, seems to be working fine!&lt;&#x2F;p&gt;
 &lt;p&gt;since it&#x27;s my first time using openbsd, here are some stuff that i will start to do on my machines after installing openbsd:&lt;&#x2F;p&gt;
 &lt;h2 id=&quot;enable-doas&quot;&gt;enable &lt;code&gt;doas&lt;&#x2F;code&gt;&lt;&#x2F;h2&gt;
 &lt;p&gt;&lt;code&gt;doas&lt;&#x2F;code&gt; is kinda the equivalent of &lt;code&gt;sudo&lt;&#x2F;code&gt;. to enable it, run &lt;code&gt;cp &#x2F;etc&#x2F;examples&#x2F;doas.conf &#x2F;etc&lt;&#x2F;code&gt; to copy the doas config file.&lt;&#x2F;p&gt;
@@ -1188,13 +1254,19 @@ If you will use the storage box outside of the Hetzner network, enable &lt;code&
         <title>how to put a custom boot logo on a thinkpad</title>
         <published>2019-02-24T00:00:00+00:00</published>
         <updated>2019-02-24T00:00:00+00:00</updated>
+        
         <author>
-          <name>Unknown</name>
+          <name>
+            
+              Unknown
+            
+          </name>
         </author>
-        <link rel="alternate" href="https://blog.x4m3.rocks/thinkpad-custom-boot-logo/" type="text/html"/>
+        
+        <link rel="alternate" type="text/html" href="https://blog.x4m3.rocks/thinkpad-custom-boot-logo/"/>
         <id>https://blog.x4m3.rocks/thinkpad-custom-boot-logo/</id>
         
-        <content type="html">&lt;h2 id=&quot;disclaimer&quot;&gt;disclaimer&lt;&#x2F;h2&gt;
+        <content type="html" xml:base="https://blog.x4m3.rocks/thinkpad-custom-boot-logo/">&lt;h2 id=&quot;disclaimer&quot;&gt;disclaimer&lt;&#x2F;h2&gt;
 &lt;p&gt;i need to warn you that you are on your own. even though it works fine, i&#x27;m not responsible of what you do.&lt;&#x2F;p&gt;
 &lt;h2 id=&quot;introduction&quot;&gt;introduction&lt;&#x2F;h2&gt;
 &lt;p&gt;you have a thinkpad. it&#x27;s beautiful, it&#x27;s fast, it&#x27;s perfect, it doesn&#x27;t run windows; there&#x27;s just one thing that could be perfect: the boot logo.&lt;&#x2F;p&gt;
@@ -1227,14 +1299,23 @@ If you will use the storage box outside of the Hetzner network, enable &lt;code&
 &lt;p&gt;if you want, i already have this selection of images ready to be used, or you can make your own!&lt;&#x2F;p&gt;
 &lt;div&gt;
 
-    &lt;a href=&quot;https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;2019-02-24-thinkpad-custom-boot-logo&#x2F;boot-logo&#x2F;pornhub.gif&quot; target=&quot;_blank&quot;&gt;
-      &lt;img src=&quot;https:&amp;#x2F;&amp;#x2F;blog.x4m3.rocks&amp;#x2F;processed_images&amp;#x2F;pornhub.66a33fa0ddb7d786.jpg&quot; &#x2F;&gt;
-    &lt;&#x2F;a&gt;
-    &lt;a href=&quot;https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;2019-02-24-thinkpad-custom-boot-logo&#x2F;boot-logo&#x2F;thinkpad2.gif&quot; target=&quot;_blank&quot;&gt;
-      &lt;img src=&quot;https:&amp;#x2F;&amp;#x2F;blog.x4m3.rocks&amp;#x2F;processed_images&amp;#x2F;thinkpad2.d689f4141765e8ee.jpg&quot; &#x2F;&gt;
+    &lt;a href=&quot;https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;2019-02-24-thinkpad-custom-boot-logo&#x2F;boot-logo&#x2F;apple-rainbow.gif&quot; target=&quot;_blank&quot;&gt;
+      &lt;img src=&quot;https:&amp;#x2F;&amp;#x2F;blog.x4m3.rocks&amp;#x2F;processed_images&amp;#x2F;apple-rainbow.dae843aec90e4fd2.jpg&quot; &#x2F;&gt;
     &lt;&#x2F;a&gt;
     &lt;a href=&quot;https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;2019-02-24-thinkpad-custom-boot-logo&#x2F;boot-logo&#x2F;archlinux.gif&quot; target=&quot;_blank&quot;&gt;
       &lt;img src=&quot;https:&amp;#x2F;&amp;#x2F;blog.x4m3.rocks&amp;#x2F;processed_images&amp;#x2F;archlinux.456d8134dea984ad.jpg&quot; &#x2F;&gt;
+    &lt;&#x2F;a&gt;
+    &lt;a href=&quot;https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;2019-02-24-thinkpad-custom-boot-logo&#x2F;boot-logo&#x2F;darth-vader.gif&quot; target=&quot;_blank&quot;&gt;
+      &lt;img src=&quot;https:&amp;#x2F;&amp;#x2F;blog.x4m3.rocks&amp;#x2F;processed_images&amp;#x2F;darth-vader.8707e38ea58ce5b9.jpg&quot; &#x2F;&gt;
+    &lt;&#x2F;a&gt;
+    &lt;a href=&quot;https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;2019-02-24-thinkpad-custom-boot-logo&#x2F;boot-logo&#x2F;epitech.gif&quot; target=&quot;_blank&quot;&gt;
+      &lt;img src=&quot;https:&amp;#x2F;&amp;#x2F;blog.x4m3.rocks&amp;#x2F;processed_images&amp;#x2F;epitech.2fb0f9976e9b5a67.jpg&quot; &#x2F;&gt;
+    &lt;&#x2F;a&gt;
+    &lt;a href=&quot;https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;2019-02-24-thinkpad-custom-boot-logo&#x2F;boot-logo&#x2F;nsa.gif&quot; target=&quot;_blank&quot;&gt;
+      &lt;img src=&quot;https:&amp;#x2F;&amp;#x2F;blog.x4m3.rocks&amp;#x2F;processed_images&amp;#x2F;nsa.881fde7a73711187.jpg&quot; &#x2F;&gt;
+    &lt;&#x2F;a&gt;
+    &lt;a href=&quot;https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;2019-02-24-thinkpad-custom-boot-logo&#x2F;boot-logo&#x2F;pornhub.gif&quot; target=&quot;_blank&quot;&gt;
+      &lt;img src=&quot;https:&amp;#x2F;&amp;#x2F;blog.x4m3.rocks&amp;#x2F;processed_images&amp;#x2F;pornhub.66a33fa0ddb7d786.jpg&quot; &#x2F;&gt;
     &lt;&#x2F;a&gt;
     &lt;a href=&quot;https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;2019-02-24-thinkpad-custom-boot-logo&#x2F;boot-logo&#x2F;puffy.gif&quot; target=&quot;_blank&quot;&gt;
       &lt;img src=&quot;https:&amp;#x2F;&amp;#x2F;blog.x4m3.rocks&amp;#x2F;processed_images&amp;#x2F;puffy.00aa29dd6b99e171.jpg&quot; &#x2F;&gt;
@@ -1242,23 +1323,14 @@ If you will use the storage box outside of the Hetzner network, enable &lt;code&
     &lt;a href=&quot;https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;2019-02-24-thinkpad-custom-boot-logo&#x2F;boot-logo&#x2F;thinkpad1.gif&quot; target=&quot;_blank&quot;&gt;
       &lt;img src=&quot;https:&amp;#x2F;&amp;#x2F;blog.x4m3.rocks&amp;#x2F;processed_images&amp;#x2F;thinkpad1.147b5c16ea6432da.jpg&quot; &#x2F;&gt;
     &lt;&#x2F;a&gt;
-    &lt;a href=&quot;https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;2019-02-24-thinkpad-custom-boot-logo&#x2F;boot-logo&#x2F;epitech.gif&quot; target=&quot;_blank&quot;&gt;
-      &lt;img src=&quot;https:&amp;#x2F;&amp;#x2F;blog.x4m3.rocks&amp;#x2F;processed_images&amp;#x2F;epitech.2fb0f9976e9b5a67.jpg&quot; &#x2F;&gt;
-    &lt;&#x2F;a&gt;
-    &lt;a href=&quot;https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;2019-02-24-thinkpad-custom-boot-logo&#x2F;boot-logo&#x2F;vim.gif&quot; target=&quot;_blank&quot;&gt;
-      &lt;img src=&quot;https:&amp;#x2F;&amp;#x2F;blog.x4m3.rocks&amp;#x2F;processed_images&amp;#x2F;vim.aed1174ef81696b6.jpg&quot; &#x2F;&gt;
-    &lt;&#x2F;a&gt;
-    &lt;a href=&quot;https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;2019-02-24-thinkpad-custom-boot-logo&#x2F;boot-logo&#x2F;darth-vader.gif&quot; target=&quot;_blank&quot;&gt;
-      &lt;img src=&quot;https:&amp;#x2F;&amp;#x2F;blog.x4m3.rocks&amp;#x2F;processed_images&amp;#x2F;darth-vader.8707e38ea58ce5b9.jpg&quot; &#x2F;&gt;
-    &lt;&#x2F;a&gt;
-    &lt;a href=&quot;https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;2019-02-24-thinkpad-custom-boot-logo&#x2F;boot-logo&#x2F;nsa.gif&quot; target=&quot;_blank&quot;&gt;
-      &lt;img src=&quot;https:&amp;#x2F;&amp;#x2F;blog.x4m3.rocks&amp;#x2F;processed_images&amp;#x2F;nsa.881fde7a73711187.jpg&quot; &#x2F;&gt;
-    &lt;&#x2F;a&gt;
-    &lt;a href=&quot;https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;2019-02-24-thinkpad-custom-boot-logo&#x2F;boot-logo&#x2F;apple-rainbow.gif&quot; target=&quot;_blank&quot;&gt;
-      &lt;img src=&quot;https:&amp;#x2F;&amp;#x2F;blog.x4m3.rocks&amp;#x2F;processed_images&amp;#x2F;apple-rainbow.dae843aec90e4fd2.jpg&quot; &#x2F;&gt;
+    &lt;a href=&quot;https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;2019-02-24-thinkpad-custom-boot-logo&#x2F;boot-logo&#x2F;thinkpad2.gif&quot; target=&quot;_blank&quot;&gt;
+      &lt;img src=&quot;https:&amp;#x2F;&amp;#x2F;blog.x4m3.rocks&amp;#x2F;processed_images&amp;#x2F;thinkpad2.d689f4141765e8ee.jpg&quot; &#x2F;&gt;
     &lt;&#x2F;a&gt;
     &lt;a href=&quot;https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;2019-02-24-thinkpad-custom-boot-logo&#x2F;boot-logo&#x2F;tux-verry-small.gif&quot; target=&quot;_blank&quot;&gt;
       &lt;img src=&quot;https:&amp;#x2F;&amp;#x2F;blog.x4m3.rocks&amp;#x2F;processed_images&amp;#x2F;tux-verry-small.9bd45f15396c7ffa.jpg&quot; &#x2F;&gt;
+    &lt;&#x2F;a&gt;
+    &lt;a href=&quot;https:&#x2F;&#x2F;blog.x4m3.rocks&#x2F;2019-02-24-thinkpad-custom-boot-logo&#x2F;boot-logo&#x2F;vim.gif&quot; target=&quot;_blank&quot;&gt;
+      &lt;img src=&quot;https:&amp;#x2F;&amp;#x2F;blog.x4m3.rocks&amp;#x2F;processed_images&amp;#x2F;vim.aed1174ef81696b6.jpg&quot; &#x2F;&gt;
     &lt;&#x2F;a&gt;
 &lt;&#x2F;div&gt;
 &lt;p&gt;you can see the requirements, go in your usb drive, open the &lt;strong&gt;readme.txt&lt;&#x2F;strong&gt; in the &lt;em&gt;flash&lt;&#x2F;em&gt; folder.&lt;&#x2F;p&gt;
@@ -1277,13 +1349,19 @@ If you will use the storage box outside of the Hetzner network, enable &lt;code&
         <title>my contributions to the linux kernel</title>
         <published>2018-04-10T00:00:00+00:00</published>
         <updated>2018-04-10T00:00:00+00:00</updated>
+        
         <author>
-          <name>Unknown</name>
+          <name>
+            
+              Unknown
+            
+          </name>
         </author>
-        <link rel="alternate" href="https://blog.x4m3.rocks/linux-kernel-contributions/" type="text/html"/>
+        
+        <link rel="alternate" type="text/html" href="https://blog.x4m3.rocks/linux-kernel-contributions/"/>
         <id>https://blog.x4m3.rocks/linux-kernel-contributions/</id>
         
-        <content type="html">&lt;p&gt;you read it right! i am a contributor to the linux kernel!&lt;&#x2F;p&gt;
+        <content type="html" xml:base="https://blog.x4m3.rocks/linux-kernel-contributions/">&lt;p&gt;you read it right! i am a contributor to the linux kernel!&lt;&#x2F;p&gt;
 &lt;p&gt;... but you are going to be dissapointed: my contributions are not going to change the world, just comments, alignments and documentation and stuff...&lt;&#x2F;p&gt;
 &lt;p&gt;i submited something like 10 patches (as of april 10, 2018) and 3 patches have been accepted and are now into the kernel!&lt;&#x2F;p&gt;
 &lt;p&gt;if you wanna check them out, you can read them on &lt;a href=&quot;https:&#x2F;&#x2F;git.kernel.org&#x2F;cgit&#x2F;linux&#x2F;kernel&#x2F;git&#x2F;torvalds&#x2F;linux.git&#x2F;log&#x2F;?qt=author&amp;amp;q=Philippe+Loctaux&quot;&gt;kernel.org&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
@@ -1301,13 +1379,19 @@ If you will use the storage box outside of the Hetzner network, enable &lt;code&
         <title>restart chrome with a url</title>
         <published>2018-04-09T00:00:00+00:00</published>
         <updated>2018-04-09T00:00:00+00:00</updated>
+        
         <author>
-          <name>Unknown</name>
+          <name>
+            
+              Unknown
+            
+          </name>
         </author>
-        <link rel="alternate" href="https://blog.x4m3.rocks/restart-chrome-url/" type="text/html"/>
+        
+        <link rel="alternate" type="text/html" href="https://blog.x4m3.rocks/restart-chrome-url/"/>
         <id>https://blog.x4m3.rocks/restart-chrome-url/</id>
         
-        <content type="html">&lt;p&gt;did you know that you can restart chrome&#x2F;chromium with a simple url?&lt;&#x2F;p&gt;
+        <content type="html" xml:base="https://blog.x4m3.rocks/restart-chrome-url/">&lt;p&gt;did you know that you can restart chrome&#x2F;chromium with a simple url?&lt;&#x2F;p&gt;
 &lt;p&gt;here is it: &lt;a href=&quot;about:&#x2F;&#x2F;restart&quot;&gt;about:&#x2F;&#x2F;restart&lt;&#x2F;a&gt; !&lt;&#x2F;p&gt;
 &lt;p&gt;but this trick does not work with the &lt;code&gt;&amp;lt;a&amp;gt;&lt;&#x2F;code&gt; html tag, which seems logical, copy the link and paste it in a new tab to get it to work&lt;&#x2F;p&gt;
 &lt;p&gt;it&#x27;d be annoying as fuck if you could click on links that restart your browser, imagine if an extension could replace every clickable link with this one! 😊&lt;&#x2F;p&gt;
@@ -1319,13 +1403,19 @@ If you will use the storage box outside of the Hetzner network, enable &lt;code&
         <title>error on zsh when using vim and autocomplete</title>
         <published>2018-03-13T00:00:00+00:00</published>
         <updated>2018-03-13T00:00:00+00:00</updated>
+        
         <author>
-          <name>Unknown</name>
+          <name>
+            
+              Unknown
+            
+          </name>
         </author>
-        <link rel="alternate" href="https://blog.x4m3.rocks/zsh-vim-autocomplete-error/" type="text/html"/>
+        
+        <link rel="alternate" type="text/html" href="https://blog.x4m3.rocks/zsh-vim-autocomplete-error/"/>
         <id>https://blog.x4m3.rocks/zsh-vim-autocomplete-error/</id>
         
-        <content type="html">&lt;p&gt;do you use &lt;strong&gt;zsh&lt;&#x2F;strong&gt; and &lt;strong&gt;ohmyzsh&lt;&#x2F;strong&gt; ?&lt;&#x2F;p&gt;
+        <content type="html" xml:base="https://blog.x4m3.rocks/zsh-vim-autocomplete-error/">&lt;p&gt;do you use &lt;strong&gt;zsh&lt;&#x2F;strong&gt; and &lt;strong&gt;ohmyzsh&lt;&#x2F;strong&gt; ?&lt;&#x2F;p&gt;
 &lt;p&gt;do you run into an issue when you are about to edit a file with vim, and you use the &lt;strong&gt;Tab&lt;&#x2F;strong&gt; key to autocomplete the filename, but instead you get something like this:&lt;&#x2F;p&gt;
 &lt;pre style=&quot;background-color:#fcf0ca;color:#282828aa;&quot;&gt;&lt;code&gt;&lt;span&gt;$ vim ~&#x2F;filena&amp;lt;TAB&amp;gt;
 &lt;&#x2F;span&gt;&lt;span&gt;_arguments:448: _vim_files: function definition file not found
@@ -1345,13 +1435,19 @@ If you will use the storage box outside of the Hetzner network, enable &lt;code&
         <title>how to link your vimrc file on windows</title>
         <published>2018-02-17T00:00:00+00:00</published>
         <updated>2018-02-17T00:00:00+00:00</updated>
+        
         <author>
-          <name>Unknown</name>
+          <name>
+            
+              Unknown
+            
+          </name>
         </author>
-        <link rel="alternate" href="https://blog.x4m3.rocks/link-your-vimrc-file-on-windows/" type="text/html"/>
+        
+        <link rel="alternate" type="text/html" href="https://blog.x4m3.rocks/link-your-vimrc-file-on-windows/"/>
         <id>https://blog.x4m3.rocks/link-your-vimrc-file-on-windows/</id>
         
-        <content type="html">&lt;p&gt;i code on my linux machine, and i use vim as my text editor.&lt;br &#x2F;&gt;
+        <content type="html" xml:base="https://blog.x4m3.rocks/link-your-vimrc-file-on-windows/">&lt;p&gt;i code on my linux machine, and i use vim as my text editor.&lt;br &#x2F;&gt;
 i&#x27;ve been using vim for almost 4 years, and i started to make my config file.&lt;br &#x2F;&gt;
 i store it with git, along all my config files for my linux setup (aka my dot files).&lt;&#x2F;p&gt;
 &lt;p&gt;here&#x27;s the thing, i also use windows to code, and i also use vim.&lt;br &#x2F;&gt;
@@ -1382,13 +1478,19 @@ and i used &lt;a href=&quot;https:&#x2F;&#x2F;en.wikipedia.org&#x2F;wiki&#x2F;NT
         <title>dd status</title>
         <published>2016-07-14T00:00:00+00:00</published>
         <updated>2016-07-14T00:00:00+00:00</updated>
+        
         <author>
-          <name>Unknown</name>
+          <name>
+            
+              Unknown
+            
+          </name>
         </author>
-        <link rel="alternate" href="https://blog.x4m3.rocks/dd-status/" type="text/html"/>
+        
+        <link rel="alternate" type="text/html" href="https://blog.x4m3.rocks/dd-status/"/>
         <id>https://blog.x4m3.rocks/dd-status/</id>
         
-        <content type="html">&lt;p&gt;Here&#x27;s a cool tip if you use dd to copy disk images to a disk, or if you want to clone drives.&lt;&#x2F;p&gt;
+        <content type="html" xml:base="https://blog.x4m3.rocks/dd-status/">&lt;p&gt;Here&#x27;s a cool tip if you use dd to copy disk images to a disk, or if you want to clone drives.&lt;&#x2F;p&gt;
 &lt;p&gt;As we all know (or should know), dd is a powerful tool; but it can be dangerous if not manipulated correctly.&lt;&#x2F;p&gt;
 &lt;p&gt;By default, dd doesn&#x27;t give any information on what is it doing; which can be very boring, because you don&#x27;t know when you&#x27;ll be able to test that new Linux distro you just discovered!&lt;&#x2F;p&gt;
 &lt;p&gt;Well, good news! You can get some status from dd! This tip works on Linux and OS X.&lt;&#x2F;p&gt;
