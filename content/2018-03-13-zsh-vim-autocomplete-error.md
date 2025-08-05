@@ -8,7 +8,7 @@ do you use __zsh__ and __ohmyzsh__ ?
 
 do you run into an issue when you are about to edit a file with vim, and you use the __Tab__ key to autocomplete the filename, but instead you get something like this:
 ```
-$ vim ~/filena<TAB>
+$ vim ~/filena&lt;TAB&gt;
 _arguments:448: _vim_files: function definition file not found
 ```
 
