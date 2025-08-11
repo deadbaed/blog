@@ -124,7 +124,7 @@ default_md          = sha256
 x509_extensions     = v3_ca
 
 [ req_distinguished_name ]
-# See <https://en.wikipedia.org/wiki/Certificate_signing_request>.
+# See &lt;https://en.wikipedia.org/wiki/Certificate_signing_request>&gt;.
 countryName          = Country (2 letter code)
 stateOrProvinceName  = State or Region
 localityName         = City
@@ -144,7 +144,6 @@ subjectKeyIdentifier = hash
 authorityKeyIdentifier = keyid:always,issuer
 basicConstraints = critical, CA:true, pathlen:0
 keyUsage = critical, digitalSignature, cRLSign, keyCertSign
-
 ```
 
 After, run

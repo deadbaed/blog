@@ -152,7 +152,7 @@ Protip for vim users: To add content of a file in current buffer directly: [Stac
 # Name = wg0
 Address = 10.131.111.1/24
 ListenPort = 51820
-PrivateKey = <server-private-key>
+PrivateKey = &lt;server-private-key&gt;
 PostUp = iptables -t nat -A POSTROUTING -s 10.131.111.0/24 -o %i -j MASQUERADE;
 PostUp = iptables -t nat -A POSTROUTING -s 10.131.110.0/24 -o %i -j MASQUERADE;
 PostUp = iptables -A INPUT -p udp -m udp --dport 51820 -j ACCEPT;
@@ -206,8 +206,8 @@ Edit your `wg0.conf`, add at the bottom:
 ```ini
 [Peer]
 # Name = name
-PublicKey = <peers/name/public.key>
-PresharedKey = <peers/name/preshared.psk>
+PublicKey = peers/name/public.key
+PresharedKey = peers/name/preshared.psk
 AllowedIPs = 10.131.111.2/32
 AllowedIPs = 10.131.110.0/24
 AllowedIPs = 10.131.111.0/24
@@ -225,14 +225,14 @@ peers/name/philt3r-name.wg.conf
 And put the following
 ```ini
 [Interface]
-PrivateKey = <peers/name/private.key>
+PrivateKey = peers/name/private.key
 Address = 10.131.111.2/24
 #DNS = 10.131.111.1
 
 [Peer]
-PublicKey = <server-public-key>
-PresharedKey = <peers/name/preshared.psk>
-Endpoint = <server-ip>:51820
+PublicKey = &lt;server-public-key&gt;
+PresharedKey = peers/name/preshared.psk
+Endpoint = server-ip:51820
 AllowedIPs = 10.131.110.0/24
 AllowedIPS = 10.131.111.0/24
 PersistentKeepalive = 25
