@@ -23,6 +23,8 @@ jobs:
       - run: nix-shell -p tailwindcss_4 --run 'tailwindcss --cwd ./leptos_ssg/opengraph' > opengraph_style.css
 
       # generate opengraph images + build blog and overwrite leptos_ssg depedency to cloned repo
+      - run: nix-shell -p firefox geckodriver xvfb-run --run 'echo "geckodriver is ready"'
+      - run: cargo build --release --features prod --config 'patch."https://github.com/deadbaed/leptos_ssg".leptos_ssg.path="./leptos_ssg"'
       - run: nix-shell -p firefox geckodriver xvfb-run --run 'xvfb-run --auto-servernum geckodriver' & cargo run --release --features prod --config 'patch."https://github.com/deadbaed/leptos_ssg".leptos_ssg.path="./leptos_ssg"'
 
       # generate css with tailwind
