@@ -2,7 +2,7 @@ name: leptos_ssg
 
 on:
   push:
-    # branches: ["master"]
+    branches: ["master"]
   workflow_dispatch:
 
 jobs:
@@ -11,18 +11,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
 
-      # clone leptos_ssg repo
-      - run: git clone https://github.com/deadbaed/leptos_ssg
-
-      # build blog and overwrite leptos_ssg depedency to cloned repo
-      - run: cargo run --release --config 'patch."https://github.com/deadbaed/leptos_ssg".leptos_ssg.path="./leptos_ssg"'
-
-      # generate css with tailwind
+      # generate opengraph css
       - uses: cachix/install-nix-action@v31
         with:
           nix_path: nixpkgs=channel:nixos-unstable
+      - run: nix-shell -p tailwindcss_4 --run 'tailwindcss' > opengraph_style.css
+
+      # clone leptos_ssg repo
+      - uses: dtolnay/rust-toolchain@stable
+      - run: git clone https://github.com/deadbaed/leptos_ssg
+
+      # generate opengraph images + build blog and overwrite leptos_ssg depedency to cloned repo
+      - run: nix-shell -p firefox geckodriver xvfb-run --run 'xvfb-run --auto-servernum geckodriver' & cargo run --release --features prod --config 'patch."https://github.com/deadbaed/leptos_ssg".leptos_ssg.path="./leptos_ssg"'
+
+      # generate css with tailwind
       - run: nix-shell -p tailwindcss_4 --run 'tailwindcss --cwd ./leptos_ssg/src --minify' > target/blog/www/style.css
 
       # create archive of new deployment

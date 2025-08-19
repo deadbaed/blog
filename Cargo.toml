@@ -4,8 +4,12 @@ version = "0.1.0"
 edition = "2024"
 publish = false
 
+[features]
+default = ["prod"]
+prod = ["leptos_ssg/optimize", "leptos_ssg/opengraph"]
+
 [dependencies]
-leptos_ssg = { git = "https://github.com/deadbaed/leptos_ssg", features = ["minify"] }
+leptos_ssg = { git = "https://github.com/deadbaed/leptos_ssg" }
 leptos = "0.8"
 
 # When debugging `leptos_ssg`
