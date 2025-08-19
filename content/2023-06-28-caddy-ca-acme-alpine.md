@@ -2,6 +2,7 @@
 title = "Setup Caddy with a CA and ACME server on Alpine Linux"
 date = 2023-06-28T00:00:00-00[UTC]
 uuid = "4a99e6df-dd18-42a0-adc7-6a9a60a3d747"
+description = "Rollout HTTPS certificates for websites on an internal network infrastructure"
 +++
 
 Now that we have a WireGuard VPN with an awesome internal DNS server, let's get a web server with HTTPS!

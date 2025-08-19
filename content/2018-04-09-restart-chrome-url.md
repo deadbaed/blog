@@ -2,6 +2,7 @@
 title = "restart chrome with a url"
 date = 2018-04-09T00:00:00-00[UTC]
 uuid = "7aafc9e1-bb69-4606-8e3d-1924eaa398fd"
+description = "A small discovery to restart Chrome with a built-in URL"
 +++
 
 did you know that you can restart chrome/chromium with a simple url?

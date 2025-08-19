@@ -2,6 +2,7 @@
 title = "Setup a private Docker registry"
 date = 2023-07-15T00:00:00-00[UTC]
 uuid = "46adb2c3-b5b6-41db-b4b9-2d498cb5d22f"
+description = "Installation of an internal Docker registry with basic authentication"
 +++
 
 My internal infrastructure is complete. I can now work on my projects, but at some point they need to go out to the world!

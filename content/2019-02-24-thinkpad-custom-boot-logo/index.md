@@ -2,6 +2,7 @@
 title = "how to put a custom boot logo on a thinkpad"
 date = 2019-02-24T00:00:00-00[UTC]
 uuid = "abfe3758-2c22-49d3-921e-ead9265a7ed1"
+description = "Customization since startup for your ThinkPad!"
 +++
 
 ## disclaimer

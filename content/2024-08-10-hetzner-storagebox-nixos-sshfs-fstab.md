@@ -2,6 +2,7 @@
 title = "Automount a Hetzner Storage Box with sshfs on NixOS"
 date = 2024-08-10T00:00:00-00[UTC]
 uuid = "2ecdf84f-6a1a-4131-91c2-eb764bb295a0"
+description = "Extend storage on a NixOS machine with an Hetzner Storage Box over ssh"
 +++
 
 I had my eyes on some nice arm64 servers from Hetzner, and I finally pulled the trigger, I got the `CAX21`.

@@ -2,6 +2,7 @@
 title = "Migrating my blog to my own engine"
 date = 2025-08-05T02:48:36+02:00[Europe/Paris]
 uuid = "47f8749a-5599-434d-b300-856b576e63f8"
+description = "Why am I creating my own blog engine"
 +++
 
 ## Begginings

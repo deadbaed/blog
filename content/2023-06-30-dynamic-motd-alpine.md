@@ -2,6 +2,7 @@
 title = "Dynamic MOTD on Alpine Linux"
 date = 2023-06-30T00:00:00-00[UTC]
 uuid = "b8116cd7-eb1d-4429-8256-eaa546422fc0"
+description = "Have a customized message when opening a shell on Alpine"
 +++
 
 When we sign in to our server, the message of the day (MOTD) is pretty lame. Let's get something better!

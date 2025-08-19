@@ -2,6 +2,7 @@
 title = "Setup WireGuard server on Alpine Linux"
 date = 2023-06-24T00:00:00-00[UTC]
 uuid = "d355c821-9f4b-48a0-8051-7f13161656e3"
+description = "Secure an internal network infrastructure with WireGuard"
 +++
 
 Let's do this baremetal, no Docker!

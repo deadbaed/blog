@@ -2,6 +2,7 @@
 title = "Setup CoreDNS on Alpine Linux"
 date = 2023-06-25T00:00:00-00[UTC]
 uuid = "67f859a8-6047-4a0b-8ba3-b7aa6a979af7"
+description = "Add a DNS server for an internal network infrastructure on Alpine"
 +++
 
 Now that we have a WireGuard VPN, let's add a DNS server, to type letters instead of numbers!

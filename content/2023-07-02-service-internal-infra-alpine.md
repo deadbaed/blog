@@ -2,6 +2,7 @@
 title = "Setup a service on our internal infrastructure on Alpine Linux"
 date = 2023-07-02T00:00:00-00[UTC]
 uuid = "a17db10b-26c7-4054-8213-94aef4a7d994"
+description = "Deploy a web service on an internal networking infrastructure"
 +++
 
 Now we have a basic internal infrastructure with:
