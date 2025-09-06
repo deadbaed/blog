@@ -5,7 +5,7 @@ edition = "2024"
 publish = false
 
 [features]
-default = ["prod"]
+default = []
 prod = ["leptos_ssg/optimize", "leptos_ssg/opengraph"]
 
 [dependencies]
