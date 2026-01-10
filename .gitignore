@@ -1,6 +1,16 @@
+# os & ide
 .DS_Store
 .*.swp
 .idea/
 .vscode/
+
+# rust & nix
 target/
-opengraph_style.css
+leptos_ssg
+
+# supervisor
+.*supervisor/
+
+# direnv
+.direnv/
+.envrc

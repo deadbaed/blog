@@ -9,7 +9,7 @@ default = []
 prod = ["leptos_ssg/optimize", "leptos_ssg/opengraph"]
 
 [dependencies]
-leptos_ssg = { git = "https://github.com/deadbaed/leptos_ssg" }
+leptos_ssg = { path = "leptos_ssg" } # symlink to leptos_ssg from nix store
 leptos = "0.8"
 
 # When debugging `leptos_ssg`

@@ -1,6 +1,13 @@
 use std::time::SystemTime;
 
 fn main() {
+    #[cfg(feature = "prod")]
+    let args = std::env::args().collect::<Vec<_>>();
+    #[cfg(feature = "prod")]
+    let css_opengraph = args
+        .get(1)
+        .expect("first argument is the path to the css of opengraph");
+
     let sys_time = SystemTime::now();
     let timestamp = sys_time
         .duration_since(SystemTime::UNIX_EPOCH)
@@ -28,7 +35,7 @@ fn main() {
     let styles = leptos_ssg::Styles {
         website: "style.css",
         #[cfg(feature = "prod")]
-        opengraph: "opengraph_style.css",
+        opengraph: css_opengraph,
     };
     let config = leptos_ssg::BuildConfig::new(
         host,
