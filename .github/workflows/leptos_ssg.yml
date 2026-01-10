@@ -10,25 +10,14 @@ jobs:
     name: Build and deploy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      # clone leptos_ssg repo
-      - uses: dtolnay/rust-toolchain@stable
-      - run: git clone https://github.com/deadbaed/leptos_ssg
-
-      # generate opengraph css
+      - uses: actions/checkout@v5
       - uses: cachix/install-nix-action@v31
-        with:
-          nix_path: nixpkgs=channel:nixos-unstable
-      - run: nix-shell -p tailwindcss_4 --run 'tailwindcss --cwd ./leptos_ssg/opengraph' > opengraph_style.css
-
-      # generate opengraph images + build blog and overwrite leptos_ssg depedency to cloned repo
-      - run: nix-shell -p firefox geckodriver xvfb-run --run 'echo "geckodriver is ready"'
-      - run: cargo build --release --features prod --config 'patch."https://github.com/deadbaed/leptos_ssg".leptos_ssg.path="./leptos_ssg"'
-      - run: nix-shell -p firefox geckodriver xvfb-run --run 'xvfb-run --auto-servernum geckodriver' & sleep 10 && cargo run --release --features prod --config 'patch."https://github.com/deadbaed/leptos_ssg".leptos_ssg.path="./leptos_ssg"'
-
-      # generate css with tailwind
-      - run: nix-shell -p tailwindcss_4 --run 'tailwindcss --cwd ./leptos_ssg/src --minify' > target/blog/www/style.css
+      - name: Get Nixpkgs path
+        run: |
+          nixpkgs_path=$(nix eval --raw -f npins/default.nix nixpkgs)
+          echo "NIX_PATH=nixpkgs=$nixpkgs_path" >> "$GITHUB_ENV"
+      - run: nix-shell --run "createSymlink leptos_ssg"
+      - run: nix-shell --arg headless true --run "buildWithOpengraph" production.nix
 
       # create archive of new deployment
       - run: echo $GITHUB_SHA > target/blog/deployment.txt

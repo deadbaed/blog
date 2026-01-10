@@ -1,0 +1,53 @@
+{
+  "pins": {
+    "leptos_ssg": {
+      "type": "Git",
+      "repository": {
+        "type": "GitHub",
+        "owner": "deadbaed",
+        "repo": "leptos_ssg"
+      },
+      "branch": "master",
+      "submodules": false,
+      "revision": "6e8c44ca129e445be01a90822b766458b326a64d",
+      "url": "https://github.com/deadbaed/leptos_ssg/archive/6e8c44ca129e445be01a90822b766458b326a64d.tar.gz",
+      "hash": "sha256-i6TOeXo0Qvv6Z5510Jisy+zh/I2poEcmSz2VxmZRiQQ="
+    },
+    "nix-supervisord": {
+      "type": "GitRelease",
+      "repository": {
+        "type": "GitHub",
+        "owner": "deadbaed",
+        "repo": "nix-supervisord"
+      },
+      "pre_releases": false,
+      "version_upper_bound": null,
+      "release_prefix": null,
+      "submodules": false,
+      "version": "0.3.0",
+      "revision": "cd7d6f8097eee8a4ab9c69f5c2a5e6308e54e4cb",
+      "url": "https://api.github.com/repos/deadbaed/nix-supervisord/tarball/refs/tags/0.3.0",
+      "hash": "sha256-PZCezxfJbFCO4iMr+pcZ869tM9ib/SubVVDSGhNlkW4="
+    },
+    "nixpkgs": {
+      "type": "Channel",
+      "name": "nixpkgs-unstable",
+      "url": "https://releases.nixos.org/nixpkgs/nixpkgs-26.05pre915678.cfc52a405c6e/nixexprs.tar.xz",
+      "hash": "sha256-7mq+kpw4eDnEzeg2WoxCXaLvcnG8oNs0e/+KoDZX+P4="
+    },
+    "treefmt-nix": {
+      "type": "Git",
+      "repository": {
+        "type": "GitHub",
+        "owner": "numtide",
+        "repo": "treefmt-nix"
+      },
+      "branch": "main",
+      "submodules": false,
+      "revision": "778a1d691f1ef45dd68c661715c5bf8cbf131c80",
+      "url": "https://github.com/numtide/treefmt-nix/archive/778a1d691f1ef45dd68c661715c5bf8cbf131c80.tar.gz",
+      "hash": "sha256-QfX6g3Wj2vQe7oBJEbTf0npvC6sJoDbF9hb2+gM5tf8="
+    }
+  },
+  "version": 7
+}
