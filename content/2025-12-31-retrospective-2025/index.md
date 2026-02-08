@@ -34,7 +34,7 @@ I feel there is something special about embedded devices: you can create somethi
 
 I've been following [Scott Mabin](https://mabez.dev/blog/posts/esp32-rust/)'s work on getting rust programs run on ESP32s, and I am happy to see the progress made!
 
-There's a Rust library to make rust apps with a nice TUI (Terminal User Interface) called [ratatui](https://ratatui.rs). You might use it if you use some apps such as [btop](https://github.com/aristocratos/btop).
+There's a Rust library to make rust apps with a nice TUI (Terminal User Interface) called [ratatui](https://ratatui.rs). You might use it if you use some apps such as [bottom](https://github.com/ClementTsang/bottom).
 
 I had an idea of a GPS project, and I discovered [mousefood](https://github.com/j-g00da/mousefood): a backend of ratatui but for embedded devices! This is the perfect tool to display data on the embedded device itself.
 
