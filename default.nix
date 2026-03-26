@@ -11,7 +11,7 @@
 }:
 let
   supervisordProject = supervisord.mkSupervisor {
-    project_name = "opengraph";
+    project_name = "deadbaed-blog";
     paths = supervisord.mkPaths { };
     programs = [
       {
@@ -22,6 +22,17 @@ let
         name = "webserver";
         command = "${pkgs.python3}/bin/python -m http.server --directory ./target/blog 4343";
       }
+      (
+        let
+          path = "./target/blog";
+        in
+        {
+          name = "tailwind";
+          command = "cat ${leptos_ssg.tailwind.tailwindLeptosSsg}/style.css > ${path}/style.css";
+          pre_commands = [ "mkdir -p ${path}" ];
+          start_secs = 0;
+        }
+      )
     ];
   };
 

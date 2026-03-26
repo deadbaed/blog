@@ -9,9 +9,9 @@
       },
       "branch": "master",
       "submodules": false,
-      "revision": "6e8c44ca129e445be01a90822b766458b326a64d",
-      "url": "https://github.com/deadbaed/leptos_ssg/archive/6e8c44ca129e445be01a90822b766458b326a64d.tar.gz",
-      "hash": "sha256-i6TOeXo0Qvv6Z5510Jisy+zh/I2poEcmSz2VxmZRiQQ="
+      "revision": "7074e85264494b79710185d784736691dcc224fd",
+      "url": "https://github.com/deadbaed/leptos_ssg/archive/7074e85264494b79710185d784736691dcc224fd.tar.gz",
+      "hash": "sha256-QCI8J1e1subIbDfxj+prHO/12oV5aGMXusoxuDb6zm8="
     },
     "nix-supervisord": {
       "type": "GitRelease",
@@ -24,10 +24,10 @@
       "version_upper_bound": null,
       "release_prefix": null,
       "submodules": false,
-      "version": "0.3.0",
-      "revision": "cd7d6f8097eee8a4ab9c69f5c2a5e6308e54e4cb",
-      "url": "https://api.github.com/repos/deadbaed/nix-supervisord/tarball/refs/tags/0.3.0",
-      "hash": "sha256-PZCezxfJbFCO4iMr+pcZ869tM9ib/SubVVDSGhNlkW4="
+      "version": "0.4.0",
+      "revision": "739087020d9b3c367aa010e0b5faa78ad89ac6a0",
+      "url": "https://api.github.com/repos/deadbaed/nix-supervisord/tarball/refs/tags/0.4.0",
+      "hash": "sha256-RGCVT2yan5FVBc+XVoPMuyhpnTIw0xTWTaDvtgNfosY="
     },
     "nixpkgs": {
       "type": "Channel",
