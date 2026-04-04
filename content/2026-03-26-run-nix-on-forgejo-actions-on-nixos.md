@@ -60,6 +60,7 @@ I will name the images like they are GitHub Actions to keep things similar.
       ];
       settings = {
         container.network = "host";
+        log.level = "debug"; # have logs of the jobs appear in system logs
       };
     };
   };
