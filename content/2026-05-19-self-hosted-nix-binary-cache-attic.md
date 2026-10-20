@@ -90,7 +90,7 @@ atticd-atticadm make-token \
     --destroy-cache '*'
 ```
 
-In this case, the `'*'` mean that the permission is given for all caches. For examaple, to create a token which can pull indefinitely only from cache `hello`, run:
+In this case, the `'*'` mean that the permission is given for all caches. For example, to create a token which can pull indefinitely only from cache `hello`, run:
 
 ```shell
 atticd-atticadm make-token \
