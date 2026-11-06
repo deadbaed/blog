@@ -9,9 +9,9 @@
       },
       "branch": "master",
       "submodules": false,
-      "revision": "7074e85264494b79710185d784736691dcc224fd",
-      "url": "https://github.com/deadbaed/leptos_ssg/archive/7074e85264494b79710185d784736691dcc224fd.tar.gz",
-      "hash": "sha256-QCI8J1e1subIbDfxj+prHO/12oV5aGMXusoxuDb6zm8="
+      "revision": "293b6cc16d4c2720423f385f81a18b236f258f02",
+      "url": "https://github.com/deadbaed/leptos_ssg/archive/293b6cc16d4c2720423f385f81a18b236f258f02.tar.gz",
+      "hash": "sha256-J0PJX1g1eyDQxJetY3yQL2QIdAnEgPdhWdN9xSpIwwU="
     },
     "nix-supervisord": {
       "type": "GitRelease",
@@ -32,8 +32,8 @@
     "nixpkgs": {
       "type": "Channel",
       "name": "nixpkgs-unstable",
-      "url": "https://releases.nixos.org/nixpkgs/nixpkgs-26.05pre915678.cfc52a405c6e/nixexprs.tar.xz",
-      "hash": "sha256-7mq+kpw4eDnEzeg2WoxCXaLvcnG8oNs0e/+KoDZX+P4="
+      "url": "https://releases.nixos.org/nixpkgs/nixpkgs-26.11pre1108556.6dadaf4375be/nixexprs.tar.xz",
+      "hash": "sha256-JiTUXdoNJNvdD+fjVlftWiLKJfHut3cIi8j2HXL9kT4="
     },
     "treefmt-nix": {
       "type": "Git",
@@ -44,9 +44,9 @@
       },
       "branch": "main",
       "submodules": false,
-      "revision": "778a1d691f1ef45dd68c661715c5bf8cbf131c80",
-      "url": "https://github.com/numtide/treefmt-nix/archive/778a1d691f1ef45dd68c661715c5bf8cbf131c80.tar.gz",
-      "hash": "sha256-QfX6g3Wj2vQe7oBJEbTf0npvC6sJoDbF9hb2+gM5tf8="
+      "revision": "0d6d739a833ba9a9c93034862e4a7b061a062a1c",
+      "url": "https://github.com/numtide/treefmt-nix/archive/0d6d739a833ba9a9c93034862e4a7b061a062a1c.tar.gz",
+      "hash": "sha256-C3alQ2MEt0zVrUSho5NUDo3jmhbff72++bfwoqT9Omo="
     }
   },
   "version": 7
